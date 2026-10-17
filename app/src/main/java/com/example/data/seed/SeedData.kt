@@ -1,0 +1,522 @@
+package com.example.data.seed
+
+import com.example.data.model.AppNotification
+import com.example.data.model.Category
+import com.example.data.model.Coupon
+import com.example.data.model.Order
+import com.example.data.model.Product
+import com.example.data.model.Review
+import com.example.data.model.StoreSettings
+import com.example.data.model.UserAddress
+
+object SeedData {
+    val initialSettings = StoreSettings(
+        id = 1,
+        defaultDeliveryFeeBhd = 1.500,
+        freeShippingThresholdBhd = 25.000,
+        vatPercentage = 10.0,
+        storeContactPhone = "+973 1700 8899",
+        storeContactEmail = "support@mashopping.bh",
+        benefitPayNumber = "+973 3999 1234",
+        lowStockThreshold = 5,
+        commercialRegistrationNumber = "CR-984321-BH",
+        vatRegistrationNumber = "TRN-200084930100003"
+    )
+
+    val initialCategories = listOf(
+        Category(
+            id = 1,
+            nameEn = "Electronics",
+            nameAr = "إلكترونيات",
+            iconKey = "tv",
+            productCount = 14
+        ),
+        Category(
+            id = 2,
+            nameEn = "Mobile Phones",
+            nameAr = "هواتف ذكية",
+            iconKey = "phone",
+            productCount = 18
+        ),
+        Category(
+            id = 3,
+            nameEn = "Computers",
+            nameAr = "حواسيب وأجهزة",
+            iconKey = "laptop",
+            productCount = 11
+        ),
+        Category(
+            id = 4,
+            nameEn = "Home Appliances",
+            nameAr = "أجهزة منزلية",
+            iconKey = "home",
+            productCount = 16
+        ),
+        Category(
+            id = 5,
+            nameEn = "Fashion",
+            nameAr = "أزياء وموضة",
+            iconKey = "fashion",
+            productCount = 22
+        ),
+        Category(
+            id = 6,
+            nameEn = "Beauty Products",
+            nameAr = "منتجات الجمال",
+            iconKey = "beauty",
+            productCount = 15
+        ),
+        Category(
+            id = 7,
+            nameEn = "Kitchen Products",
+            nameAr = "مستلزمات المطبخ",
+            iconKey = "kitchen",
+            productCount = 12
+        ),
+        Category(
+            id = 8,
+            nameEn = "Tools & Accessories",
+            nameAr = "أدوات وإكسسوارات",
+            iconKey = "tools",
+            productCount = 19
+        ),
+        Category(
+            id = 9,
+            nameEn = "Other Products",
+            nameAr = "منتجات أخرى",
+            iconKey = "other",
+            productCount = 9
+        )
+    )
+
+    val initialProducts = listOf(
+        // Mobile Phones
+        Product(
+            id = 1,
+            nameEn = "iPhone 16 Pro Max 256GB - Desert Titanium",
+            nameAr = "آيفون 16 برو ماكس 256 جيجابايت - تيتانيوم صحراوي",
+            descriptionEn = "Grade 5 titanium design with 6.9-inch Super Retina XDR display, Camera Control, 48MP Fusion camera, and A18 Pro chip.",
+            descriptionAr = "تصميم من التيتانيوم من الدرجة 5 مع شاشة Super Retina XDR مقاس 6.9 إنش، وتحكم بالكاميرا، وكاميرا Fusion بدقة 48 ميجابكسل، وشريحة A18 Pro الفائقة.",
+            categoryId = 2,
+            categoryNameEn = "Mobile Phones",
+            categoryNameAr = "هواتف ذكية",
+            originalPriceBhd = 489.900,
+            discountPriceBhd = 449.900,
+            stock = 12,
+            rating = 4.9,
+            reviewCount = 38,
+            isFeatured = true,
+            isBestSeller = true,
+            isFlashSale = false,
+            imageUrl = "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&auto=format&fit=crop&q=80",
+            brand = "Apple",
+            specs = "Screen: 6.9\" OLED 120Hz\nChip: A18 Pro Bionic\nStorage: 256GB\nBattery: Up to 33 hours video playback\n5G Enabled"
+        ),
+        Product(
+            id = 2,
+            nameEn = "Samsung Galaxy S25 Ultra 512GB - Titanium Silver",
+            nameAr = "سامسونج جالكسي S25 الترا 512 جيجابايت - فضي تيتانيوم",
+            descriptionEn = "Galaxy AI powerhouse with Snapdragon 8 Elite, 200MP camera system with 100x Space Zoom, built-in S Pen, and titanium frame.",
+            descriptionAr = "قوة Galaxy AI الفائقة مع معالج سنابدراجون 8 إيليت، ونظام كاميرا بدقة 200 ميجابكسل مع تقريب 100 ضعف، وقلم S Pen مدمج.",
+            categoryId = 2,
+            categoryNameEn = "Mobile Phones",
+            categoryNameAr = "هواتف ذكية",
+            originalPriceBhd = 475.000,
+            discountPriceBhd = 425.000,
+            stock = 8,
+            rating = 4.8,
+            reviewCount = 29,
+            isFeatured = true,
+            isBestSeller = true,
+            isFlashSale = true,
+            imageUrl = "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=600&auto=format&fit=crop&q=80",
+            brand = "Samsung",
+            specs = "Screen: 6.8\" Dynamic AMOLED 2X\nCamera: 200MP + 50MP + 12MP\nRAM: 12GB\nStorage: 512GB\nBattery: 5000 mAh 45W"
+        ),
+
+        // Electronics
+        Product(
+            id = 3,
+            nameEn = "Sony WH-1000XM5 Wireless Noise-Canceling Headphones",
+            nameAr = "سماعات سوني الرأسية اللاسلكية WH-1000XM5 عازلة للضوضاء",
+            descriptionEn = "Industry-leading noise cancellation with 8 microphones, Auto NC Optimizer, crystal-clear hands-free calling, and 30-hour battery life.",
+            descriptionAr = "عزل ضوضاء رائد في الصناعة مع 8 ميكروفونات ومحسن ذكي للضوضاء، وصوت عالي الدقة وعمر بطارية يصل إلى 30 ساعة.",
+            categoryId = 1,
+            categoryNameEn = "Electronics",
+            categoryNameAr = "إلكترونيات",
+            originalPriceBhd = 139.900,
+            discountPriceBhd = 114.900,
+            stock = 15,
+            rating = 4.9,
+            reviewCount = 64,
+            isFeatured = true,
+            isBestSeller = true,
+            isFlashSale = false,
+            imageUrl = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80",
+            brand = "Sony",
+            specs = "Battery: 30 hours\nFast Charge: 3 min for 3 hrs\nBluetooth: 5.2 LDAC Hi-Res\nWeight: 250g"
+        ),
+        Product(
+            id = 4,
+            nameEn = "Apple Watch Series 10 GPS 46mm - Jet Black",
+            nameAr = "ساعة أبل الجيل العاشر GPS قياس 46 ملم - أسود قاتم",
+            descriptionEn = "Thinnest Apple Watch ever with our biggest display, advanced health sensors including sleep apnea notifications, and fast charging.",
+            descriptionAr = "أنحف ساعة أبل مع أكبر شاشة عرض وحساسات صحية متقدمة وإشعارات انقطاع التنفس أثناء النوم وشحن فائق السرعة.",
+            categoryId = 1,
+            categoryNameEn = "Electronics",
+            categoryNameAr = "إلكترونيات",
+            originalPriceBhd = 165.000,
+            discountPriceBhd = 148.000,
+            stock = 14,
+            rating = 4.7,
+            reviewCount = 21,
+            isFeatured = false,
+            isBestSeller = false,
+            isFlashSale = true,
+            imageUrl = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80",
+            brand = "Apple",
+            specs = "Size: 46mm Wide-angle OLED\nWater Resistance: 50m\nECG & Blood Oxygen\nBattery: All-day 18-36 hrs"
+        ),
+
+        // Computers
+        Product(
+            id = 5,
+            nameEn = "MacBook Air 15\" M3 - Space Grey (16GB / 512GB)",
+            nameAr = "ماك بوك إير 15 إنش M3 - رمادي فلكي (16 جيجا / 512 جيجا)",
+            descriptionEn = "Strikingly thin design with blazing-fast M3 chip, Liquid Retina display with 500 nits brightness, 18 hours battery life, and MagSafe charging.",
+            descriptionAr = "تصميم نحيف مذهل مع شريحة M3 فائقة السرعة وشاشة Liquid Retina مذهلة وبطارية تدوم حتى 18 ساعة.",
+            categoryId = 3,
+            categoryNameEn = "Computers",
+            categoryNameAr = "حواسيب وأجهزة",
+            originalPriceBhd = 560.000,
+            discountPriceBhd = 499.000,
+            stock = 6,
+            rating = 4.9,
+            reviewCount = 18,
+            isFeatured = true,
+            isBestSeller = false,
+            isFlashSale = false,
+            imageUrl = "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80",
+            brand = "Apple",
+            specs = "Processor: Apple M3 8-core CPU\nGPU: 10-core GPU\nUnified Memory: 16GB\nStorage: 512GB SSD\nWeight: 1.51 kg"
+        ),
+
+        // Home Appliances
+        Product(
+            id = 6,
+            nameEn = "Dyson V15 Detect Absolute Cordless Vacuum",
+            nameAr = "مكنسة دايسون V15 ديتكت ابسولوت اللاسلكية الذكية",
+            descriptionEn = "Dyson's most powerful, intelligent cordless vacuum. Laser reveals microscopic dust, piezo sensor automatically sizes and counts particles.",
+            descriptionAr = "المكنسة اللاسلكية الأقوى والأذكى من دايسون مزودة بتقنية الليزر لكشف ذرات الغبار غير المرئية ومستشعر بيزو الذكي.",
+            categoryId = 4,
+            categoryNameEn = "Home Appliances",
+            categoryNameAr = "أجهزة منزلية",
+            originalPriceBhd = 285.000,
+            discountPriceBhd = 249.500,
+            stock = 7,
+            rating = 4.8,
+            reviewCount = 42,
+            isFeatured = false,
+            isBestSeller = true,
+            isFlashSale = true,
+            imageUrl = "https://images.unsplash.com/photo-1558317374-067fb5f30001?w=600&auto=format&fit=crop&q=80",
+            brand = "Dyson",
+            specs = "Suction Power: 240 AW\nRun Time: Up to 60 mins\nBin Volume: 0.76 L\nFiltration: 99.99% down to 0.3 microns"
+        ),
+
+        // Kitchen Products
+        Product(
+            id = 7,
+            nameEn = "De'Longhi Magnifica S Automatic Espresso Machine",
+            nameAr = "ماكينة قهوة ديلونجي ماجنيفيكا إس الأوتوماتيكية لصنع الإسبريسو",
+            descriptionEn = "Bean-to-cup espresso machine with integrated grinder, traditional milk frother, customizable aroma intensity, and 15-bar pressure.",
+            descriptionAr = "ماكينة تحضير قهوة إسبريسو من الحبوب مباشرة مع مطحنة مدمجة ونظام صنع رغوة الحليب الغنية وضغط 15 بار.",
+            categoryId = 7,
+            categoryNameEn = "Kitchen Products",
+            categoryNameAr = "مستلزمات المطبخ",
+            originalPriceBhd = 145.000,
+            discountPriceBhd = 125.000,
+            stock = 9,
+            rating = 4.8,
+            reviewCount = 53,
+            isFeatured = true,
+            isBestSeller = false,
+            isFlashSale = false,
+            imageUrl = "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=600&auto=format&fit=crop&q=80",
+            brand = "De'Longhi",
+            specs = "Pressure: 15 Bar\nCapacity: 1.8 Liters\nIntegrated Steel Conical Burr Grinder\nEnergy Class: A"
+        ),
+        Product(
+            id = 8,
+            nameEn = "Ninja Foodi 11-in-1 Smart XL Multi-Cooker & Air Fryer",
+            nameAr = "طباخة نينجا الذكية فودي 11 في 1 مع قلاية هوائية سعة كبيرة",
+            descriptionEn = "TenderCrisp technology combines pressure cooking with air crisping for succulent meats and crispy fries in one pot.",
+            descriptionAr = "تقنية تندر كريسب تجمع بين الطهي بالضغط والقلي الهوائي للحصول على وجبات لذيذة وصحية وسريعة في وعاء واحد.",
+            categoryId = 7,
+            categoryNameEn = "Kitchen Products",
+            categoryNameAr = "مستلزمات المطبخ",
+            originalPriceBhd = 95.000,
+            discountPriceBhd = 79.900,
+            stock = 16,
+            rating = 4.7,
+            reviewCount = 31,
+            isFeatured = false,
+            isBestSeller = true,
+            isFlashSale = true,
+            imageUrl = "https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=600&auto=format&fit=crop&q=80",
+            brand = "Ninja",
+            specs = "Capacity: 7.5L Family Size\nWattage: 1760W\n11 Cooking Functions\nDishwasher Safe Parts"
+        ),
+
+        // Fashion
+        Product(
+            id = 9,
+            nameEn = "Luxury Chronograph Sapphire Men's Watch",
+            nameAr = "ساعة يد كلاسيكية رجالية فاخرة بقرص كرونوغراف وزجاج زفير",
+            descriptionEn = "Handcrafted stainless steel timepiece with Japanese quartz movement, genuine leather strap, sapphire crystal glass, and 100m water resistance.",
+            descriptionAr = "ساعة يد أنيقة من الفولاذ المقاوم للصدأ بحركة كوارتز يابانية وحزام جلد طبيعي وزجاج زفير مقاوم للخدوش.",
+            categoryId = 5,
+            categoryNameEn = "Fashion",
+            categoryNameAr = "أزياء وموضة",
+            originalPriceBhd = 65.000,
+            discountPriceBhd = 48.000,
+            stock = 20,
+            rating = 4.6,
+            reviewCount = 24,
+            isFeatured = true,
+            isBestSeller = false,
+            isFlashSale = false,
+            imageUrl = "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=600&auto=format&fit=crop&q=80",
+            brand = "Chronos Heritage",
+            specs = "Case: 42mm 316L Stainless Steel\nGlass: Anti-reflective Sapphire\nStrap: Italian Top Grain Leather\nWater Resistant: 10 ATM"
+        ),
+
+        // Beauty Products
+        Product(
+            id = 10,
+            nameEn = "Royal Arabian Oud & Amber Eau de Parfum 100ml",
+            nameAr = "عطر العود والعنبر الملكي العربي أو دو بارفان 100 مل",
+            descriptionEn = "Rich oriental fragrance infused with Cambodian agarwood, warm amber crystals, Taif rose, and velvety vanilla notes for extraordinary longevity.",
+            descriptionAr = "عطر شرقي فاخر يجمع بين نفحات العود الكمبودي المعتق والعنبر الدافئ وورد الطائف مع الفانيليا الفاتنة لثبات طويل وفخامة مميزة.",
+            categoryId = 6,
+            categoryNameEn = "Beauty Products",
+            categoryNameAr = "منتجات الجمال",
+            originalPriceBhd = 45.000,
+            discountPriceBhd = 36.000,
+            stock = 25,
+            rating = 4.9,
+            reviewCount = 57,
+            isFeatured = true,
+            isBestSeller = true,
+            isFlashSale = false,
+            imageUrl = "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&auto=format&fit=crop&q=80",
+            brand = "Arabian Royalty",
+            specs = "Volume: 100ml / 3.4 fl oz\nConcentration: Eau De Parfum\nLongevity: 14+ Hours\nOrigin: Made in GCC"
+        ),
+
+        // Tools & Accessories
+        Product(
+            id = 11,
+            nameEn = "Bosch Professional 18V Cordless Hammer Drill Kit",
+            nameAr = "طقم دريل ومفك براغي بوش الاحترافي اللاسلكي 18 فولت",
+            descriptionEn = "Heavy duty brushless motor delivering 63 Nm torque, complete with two 4.0Ah Li-Ion batteries, fast charger, and 35-piece bit accessory case.",
+            descriptionAr = "محرك قوي بدون فرش كربونية بعزم دوران 63 نيوتن متر مع بطاريتين ليثيوم 4.0 أمبير وشاحن سريع وحقيبة إكسسوارات متكاملة.",
+            categoryId = 8,
+            categoryNameEn = "Tools & Accessories",
+            categoryNameAr = "أدوات وإكسسوارات",
+            originalPriceBhd = 78.500,
+            discountPriceBhd = 64.900,
+            stock = 11,
+            rating = 4.8,
+            reviewCount = 19,
+            isFeatured = false,
+            isBestSeller = false,
+            isFlashSale = false,
+            imageUrl = "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&auto=format&fit=crop&q=80",
+            brand = "Bosch",
+            specs = "Torque: 63 Nm\nBattery: 2x 18V 4.0Ah CoolPack\nChuck: 13mm All-Metal\nWeight: 1.54 kg"
+        ),
+
+        // Other Products
+        Product(
+            id = 12,
+            nameEn = "Premium Waterproof Expandable Travel Backpack",
+            nameAr = "حقيبة ظهر سفر فاخرة مقاومة للماء وقابلة للتوسيع",
+            descriptionEn = "TSA-friendly 40L capacity with dedicated padded laptop compartment (up to 17.3\"), USB charging port, and ergonomic ventilated shoulder straps.",
+            descriptionAr = "حقيبة سفر عملية سعة 40 لتر مقاومة للماء مع جيب مبطن للكمبيوتر المحمول ومنفذ شحن USB وأحزمة مريحة داعمة للظهر.",
+            categoryId = 9,
+            categoryNameEn = "Other Products",
+            categoryNameAr = "منتجات أخرى",
+            originalPriceBhd = 26.000,
+            discountPriceBhd = 19.900,
+            stock = 30,
+            rating = 4.7,
+            reviewCount = 33,
+            isFeatured = false,
+            isBestSeller = true,
+            isFlashSale = false,
+            imageUrl = "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80",
+            brand = "Voyager Pro",
+            specs = "Capacity: 35-42 Liters Expandable\nMaterial: High Density Oxford Waterproof\nLaptop Sleeve: Up to 17.3\"\nTSA Lock Compatible"
+        )
+    )
+
+    val initialCoupons = listOf(
+        Coupon(
+            code = "MASHOP10",
+            discountPercent = 10.0,
+            isPercent = true,
+            minSpendBhd = 5.000,
+            descriptionEn = "10% off on all orders",
+            descriptionAr = "خصم 10% على جميع الطلبات"
+        ),
+        Coupon(
+            code = "BAHRAIN25",
+            discountPercent = 25.0,
+            isPercent = true,
+            minSpendBhd = 40.000,
+            descriptionEn = "25% off when you spend 40 BHD or more",
+            descriptionAr = "خصم 25% عند الشراء بقيمة 40 د.ب أو أكثر"
+        ),
+        Coupon(
+            code = "WELCOME",
+            fixedDiscountBhd = 2.000,
+            isPercent = false,
+            minSpendBhd = 10.000,
+            descriptionEn = "2.000 BHD off for new customers",
+            descriptionAr = "خصم 2.000 د.ب ترحيبي للعملاء الجدد"
+        )
+    )
+
+    val initialAddresses = listOf(
+        UserAddress(
+            id = 1,
+            label = "Home (Manama)",
+            recipientName = "Farid Al-Sayed",
+            phone = "+973 3948 2011",
+            building = "Building 412, Flat 14",
+            road = "Road 2814",
+            block = "Block 328",
+            city = "Manama",
+            isDefault = true
+        ),
+        UserAddress(
+            id = 2,
+            label = "Office (Seef District)",
+            recipientName = "Farid Al-Sayed",
+            phone = "+973 1755 4920",
+            building = "Al-Moayyed Tower, Fl 18",
+            road = "Road 2832",
+            block = "Block 428",
+            city = "Seef / Capital",
+            isDefault = false
+        )
+    )
+
+    val initialReviews = listOf(
+        Review(
+            productId = 1,
+            authorName = "Ahmed Bu-Khalid",
+            rating = 5,
+            comment = "Delivered within 24 hours in Riffa! Packaging was pristine and genuine Apple Bahrain warranty included.",
+            dateString = "Yesterday"
+        ),
+        Review(
+            productId = 1,
+            authorName = "Fatima Al-Jowder",
+            rating = 5,
+            comment = "The Desert Titanium color is gorgeous. Battery easily lasts 2 full days. Very pleased with MA Shopping service!",
+            dateString = "3 days ago"
+        ),
+        Review(
+            productId = 3,
+            authorName = "Jassim Al-Mannai",
+            rating = 5,
+            comment = "Noise canceling on flights is absolute silence. Very comfortable on ears even for 6 hours straight.",
+            dateString = "1 week ago"
+        ),
+        Review(
+            productId = 10,
+            authorName = "Mariam Kanoo",
+            rating = 5,
+            comment = "Luxurious authentic scent, stays on clothes for days! Highly recommended.",
+            dateString = "2 weeks ago"
+        )
+    )
+
+    val initialOrders = listOf(
+        Order(
+            id = "MA-9104",
+            customerName = "Farid Al-Sayed",
+            customerPhone = "+973 3948 2011",
+            customerEmail = "farid@mashopping.bh",
+            addressLine = "Building 412, Flat 14, Road 2814",
+            buildingNumber = "412",
+            blockNumber = "328",
+            city = "Manama",
+            governorate = "Capital Governorate",
+            itemsSummary = "Sony WH-1000XM5 Headphones (1x)",
+            itemsJson = """[{"productId":3,"title":"Sony WH-1000XM5 Headphones","qty":1,"price":114.900}]""",
+            subtotalBhd = 114.900,
+            deliveryFeeBhd = 0.0, // Qualified for free shipping (> 25 BHD)
+            vatBhd = 11.490,
+            discountBhd = 11.490, // Applied MASHOP10
+            totalBhd = 114.900,
+            appliedCoupon = "MASHOP10",
+            paymentMethod = "BENEFIT_PAY",
+            paymentStatus = "PAID",
+            orderStatus = "OUT_FOR_DELIVERY",
+            createdAt = System.currentTimeMillis() - (18 * 3600 * 1000),
+            estimatedDelivery = "Today before 6:00 PM",
+            notes = "Please call customer upon arrival at gate"
+        ),
+        Order(
+            id = "MA-8842",
+            customerName = "Farid Al-Sayed",
+            customerPhone = "+973 3948 2011",
+            customerEmail = "farid@mashopping.bh",
+            addressLine = "Building 412, Flat 14, Road 2814",
+            buildingNumber = "412",
+            blockNumber = "328",
+            city = "Manama",
+            governorate = "Capital Governorate",
+            itemsSummary = "Royal Arabian Oud EDP (1x), Travel Backpack (1x)",
+            itemsJson = """[{"productId":10,"title":"Royal Arabian Oud EDP","qty":1,"price":36.000},{"productId":12,"title":"Travel Backpack","qty":1,"price":19.900}]""",
+            subtotalBhd = 55.900,
+            deliveryFeeBhd = 0.0,
+            vatBhd = 5.590,
+            discountBhd = 2.000,
+            totalBhd = 59.490,
+            appliedCoupon = "WELCOME",
+            paymentMethod = "CASH_ON_DELIVERY",
+            paymentStatus = "PAID",
+            orderStatus = "DELIVERED",
+            createdAt = System.currentTimeMillis() - (5 * 86400 * 1000),
+            estimatedDelivery = "Delivered on Oct 12",
+            notes = "Package received by customer"
+        )
+    )
+
+    val initialNotifications = listOf(
+        AppNotification(
+            id = 1,
+            titleEn = "Your Order is Out for Delivery! 🚚",
+            titleAr = "طلبك في طريقه للتوصيل الآن! 🚚",
+            messageEn = "Order #MA-9104 is on the delivery van and will reach your address in Manama today.",
+            messageAr = "الطلب رقم #MA-9104 مع مندوب التوصيل وسيصل إلى عنوانك في المنامة اليوم.",
+            type = "ORDER",
+            timestamp = System.currentTimeMillis() - (2 * 3600 * 1000),
+            isRead = false
+        ),
+        AppNotification(
+            id = 2,
+            titleEn = "Weekend Flash Sale in Bahrain! ✨",
+            titleAr = "عروض الويكند الحصرية في البحرين! ✨",
+            messageEn = "Enjoy up to 25% off on Electronics and Home Appliances with code BAHRAIN25.",
+            messageAr = "استمتع بخصومات تصل إلى 25% على الإلكترونيات والأجهزة المنزلية بكود BAHRAIN25.",
+            type = "PROMO",
+            timestamp = System.currentTimeMillis() - (24 * 3600 * 1000),
+            isRead = false
+        )
+    )
+}
