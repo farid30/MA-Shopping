@@ -2,7 +2,6 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// MA Shopping Brand Palette - Modern Luxury E-Commerce (Royal Navy, Gold, Slate)
 val Navy900 = Color(0xFF0F172A)
 val Navy800 = Color(0xFF1E293B)
 val Navy700 = Color(0xFF334155)

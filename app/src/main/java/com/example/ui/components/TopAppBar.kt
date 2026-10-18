@@ -1,6 +1,5 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
@@ -34,8 +32,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.StoreSettings
 import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.Navy900
 import com.example.ui.theme.RoseRed
@@ -45,6 +45,7 @@ fun AppHeader(
     isArabic: Boolean,
     unreadNotificationsCount: Int,
     isAdminMode: Boolean,
+    storeSettings: StoreSettings,
     onLanguageToggle: () -> Unit,
     onNotificationsClick: () -> Unit,
     onAdminToggleClick: () -> Unit,
@@ -66,7 +67,7 @@ fun AppHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Brand Logo & Title
+                // Dynamic Shop Name & Logo
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.testTag("app_brand_header")
@@ -79,7 +80,7 @@ fun AppHeader(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.ShoppingBag,
-                                contentDescription = "MA Shopping",
+                                contentDescription = storeSettings.shopNameEn,
                                 tint = GoldPrimary,
                                 modifier = Modifier.size(22.dp)
                             )
@@ -91,8 +92,8 @@ fun AppHeader(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "MA Shopping",
-                                fontSize = 18.sp,
+                                text = if (isArabic) storeSettings.shopNameAr else storeSettings.shopNameEn,
+                                fontSize = 17.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -102,7 +103,7 @@ fun AppHeader(
                                 shape = RoundedCornerShape(6.dp)
                             ) {
                                 Text(
-                                    text = "🇧🇭 BHD",
+                                    text = "🇧🇭 ${storeSettings.currencyCode}",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
@@ -110,16 +111,17 @@ fun AppHeader(
                             }
                         }
                         Text(
-                            text = if (isArabic) "وجهتك الأولى للتسوق في البحرين" else "Bahrain's Premier Online Store",
+                            text = if (isArabic) storeSettings.shopTaglineAr else storeSettings.shopTaglineEn,
                             fontSize = 10.sp,
-                            color = Color.Gray
+                            color = Color.Gray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
 
                 // Header Action Buttons
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Language Switcher Chip
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(8.dp),
@@ -150,7 +152,6 @@ fun AppHeader(
 
                     Spacer(modifier = Modifier.width(6.dp))
 
-                    // Notifications Bell with Badge
                     IconButton(
                         onClick = onNotificationsClick,
                         modifier = Modifier.testTag("notifications_btn")
@@ -175,7 +176,6 @@ fun AppHeader(
                         }
                     }
 
-                    // Admin Mode quick indicator
                     IconButton(
                         onClick = onAdminToggleClick,
                         modifier = Modifier.testTag("admin_mode_btn")
@@ -210,7 +210,7 @@ fun AppHeader(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isArabic) "وضع المدير نشط - إدارة المنتجات والطلبات" else "ADMIN MODE ACTIVE - Store Management",
+                                text = if (isArabic) "وضع المدير نشط - تعديل هوية وتفاصيل المتجر" else "ADMIN MODE ACTIVE - Shop Name & Store Details Editor",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = GoldPrimary

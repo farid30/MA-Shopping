@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -43,7 +44,6 @@ import coil.compose.AsyncImage
 import com.example.data.model.Product
 import com.example.ui.theme.EmeraldGreen
 import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.Navy900
 import com.example.ui.theme.RoseRed
 
 @Composable
@@ -51,6 +51,7 @@ fun ProductCard(
     product: Product,
     isArabic: Boolean,
     isWishlisted: Boolean,
+    currencySymbol: String,
     onProductClick: () -> Unit,
     onAddToCartClick: () -> Unit,
     onWishlistToggle: () -> Unit,
@@ -63,13 +64,10 @@ fun ProductCard(
             .clickable(onClick = onProductClick)
             .testTag("product_card_${product.id}"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Product Image with badges and wishlist button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -80,12 +78,9 @@ fun ProductCard(
                     model = product.imageUrl,
                     contentDescription = if (isArabic) product.nameAr else product.nameEn,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(160.dp)
+                    modifier = Modifier.fillMaxSize()
                 )
 
-                // Discount Badge
                 if (product.hasDiscount) {
                     Surface(
                         color = RoseRed,
@@ -102,7 +97,6 @@ fun ProductCard(
                     }
                 }
 
-                // Wishlist Icon Button
                 Surface(
                     color = Color.White.copy(alpha = 0.9f),
                     shape = CircleShape,
@@ -114,9 +108,7 @@ fun ProductCard(
                 ) {
                     IconButton(
                         onClick = onWishlistToggle,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .testTag("wishlist_btn_${product.id}")
+                        modifier = Modifier.testTag("wishlist_btn_${product.id}")
                     ) {
                         Icon(
                             imageVector = if (isWishlisted) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
@@ -127,7 +119,6 @@ fun ProductCard(
                     }
                 }
 
-                // Stock status overlay if low stock
                 if (product.stock in 1..3) {
                     Surface(
                         color = GoldPrimary.copy(alpha = 0.95f),
@@ -142,32 +133,10 @@ fun ProductCard(
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
-                } else if (product.stock <= 0) {
-                    Surface(
-                        color = Color.Black.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                    ) {
-                        Text(
-                            text = if (isArabic) "نفدت الكمية" else "Out of Stock",
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
                 }
             }
 
-            // Product Details
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-            ) {
-                // Category & Rating
+            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -184,12 +153,7 @@ fun ProductCard(
                     )
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.Star,
-                            contentDescription = "Rating",
-                            tint = GoldPrimary,
-                            modifier = Modifier.size(13.dp)
-                        )
+                        Icon(imageVector = Icons.Filled.Star, contentDescription = "Rating", tint = GoldPrimary, modifier = Modifier.size(13.dp))
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
                             text = String.format(java.util.Locale.US, "%.1f", product.rating),
@@ -201,7 +165,6 @@ fun ProductCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Title
                 Text(
                     text = if (isArabic) product.nameAr else product.nameEn,
                     fontSize = 13.sp,
@@ -214,7 +177,6 @@ fun ProductCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Prices
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Bottom,
@@ -223,41 +185,30 @@ fun ProductCard(
                     Column {
                         if (product.hasDiscount) {
                             Text(
-                                text = String.format(java.util.Locale.US, "%.3f", product.originalPriceBhd) + if (isArabic) " د.ب" else " BHD",
+                                text = String.format(java.util.Locale.US, "%.3f", product.originalPriceBhd) + " $currencySymbol",
                                 fontSize = 11.sp,
                                 color = Color.Gray,
                                 textDecoration = TextDecoration.LineThrough
                             )
                         }
                         Text(
-                            text = String.format(java.util.Locale.US, "%.3f", product.currentPrice) + if (isArabic) " د.ب" else " BHD",
+                            text = String.format(java.util.Locale.US, "%.3f", product.currentPrice) + " $currencySymbol",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
 
-                    // Add to cart button
                     FilledTonalButton(
                         onClick = onAddToCartClick,
                         enabled = product.stock > 0,
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .height(34.dp)
-                            .testTag("add_to_cart_btn_${product.id}"),
+                        modifier = Modifier.height(34.dp).testTag("add_to_cart_btn_${product.id}"),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AddShoppingCart,
-                            contentDescription = "Add to Cart",
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Icon(imageVector = Icons.Default.AddShoppingCart, contentDescription = "Add to Cart", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (isArabic) "أضف" else "Add",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = if (isArabic) "أضف" else "Add", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }

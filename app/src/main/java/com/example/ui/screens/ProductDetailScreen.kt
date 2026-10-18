@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,36 +11,32 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,8 +46,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -72,16 +67,16 @@ import coil.compose.AsyncImage
 import com.example.data.model.Product
 import com.example.ui.theme.EmeraldGreen
 import com.example.ui.theme.GoldPrimary
+import com.example.ui.theme.Navy800
 import com.example.ui.theme.Navy900
 import com.example.ui.theme.RoseRed
 import com.example.ui.viewmodel.ShopViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
     product: Product,
     viewModel: ShopViewModel,
-    onBackClick: () -> Unit,
+    onBack: () -> Unit,
     onNavigateToCart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -89,375 +84,486 @@ fun ProductDetailScreen(
     val wishlistItems by viewModel.wishlistItems.collectAsState()
     val isWishlisted = wishlistItems.any { it.productId == product.id }
     val reviews by viewModel.getReviews(product.id).collectAsState(initial = emptyList())
+    val storeSettings by viewModel.storeSettings.collectAsState()
 
     var quantity by remember { mutableIntStateOf(1) }
+    var selectedImageIndex by remember { mutableIntStateOf(0) }
     var showReviewDialog by remember { mutableStateOf(false) }
-    var userRating by remember { mutableIntStateOf(5) }
-    var userComment by remember { mutableStateOf("") }
+
+    val images = remember(product) {
+        if (product.imageUrls.isNotBlank()) {
+            product.imageUrls.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        } else {
+            listOf(product.imageUrl)
+        }
+    }
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .testTag("product_detail_screen"),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (isArabic) product.categoryNameAr else product.categoryNameEn,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.testTag("btn_back_from_detail")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick, modifier = Modifier.testTag("detail_back_btn")) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { viewModel.toggleWishlist(product.id) }) {
-                        Icon(
-                            imageVector = if (isWishlisted) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Wishlist",
-                            tint = if (isWishlisted) RoseRed else Color.Gray
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                }
+
+                Text(
+                    text = if (isArabic) product.brand.ifBlank { storeSettings.shopNameAr } else product.brand.ifBlank { storeSettings.shopNameEn },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
-            )
+
+                Row {
+                    IconButton(
+                        onClick = { viewModel.toggleWishlist(product.id) },
+                        modifier = Modifier.testTag("btn_toggle_wishlist_detail")
+                    ) {
+                        Icon(
+                            imageVector = if (isWishlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Wishlist",
+                            tint = if (isWishlisted) RoseRed else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(
+                        onClick = onNavigateToCart,
+                        modifier = Modifier.testTag("btn_go_to_cart_detail")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Cart"
+                        )
+                    }
+                }
+            }
         },
         bottomBar = {
-            // Persistent Bottom Bar for Add to Cart
             Surface(
                 shadowElevation = 8.dp,
                 color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (isArabic) "السعر الإجمالي" else "Total Price",
-                            fontSize = 11.sp,
-                            color = Color.Gray
+                            text = if (isArabic) "الإجمالي" else "Total Price",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = viewModel.formatPrice(product.currentPrice * quantity),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Navy900
                         )
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = {
-                                viewModel.addToCart(product.id, quantity)
-                                onNavigateToCart()
+                    Button(
+                        onClick = {
+                            viewModel.addToCart(product.id, quantity)
+                        },
+                        enabled = product.stockQuantity > 0,
+                        colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .weight(1.5f)
+                            .height(50.dp)
+                            .testTag("btn_add_to_cart_action")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = null,
+                            tint = Navy900,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (product.stockQuantity <= 0) {
+                                if (isArabic) "نفد من المخزون" else "Out of Stock"
+                            } else {
+                                if (isArabic) "إضافة إلى السلة" else "Add to Cart"
                             },
-                            enabled = product.stock > 0,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .height(48.dp)
-                                .testTag("buy_now_btn")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingBag,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (isArabic) "اشتري الآن" else "Buy Now",
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        FilledTonalButton(
-                            onClick = {
-                                viewModel.addToCart(product.id, quantity)
-                            },
-                            enabled = product.stock > 0,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .height(48.dp)
-                                .testTag("detail_add_cart_btn")
-                        ) {
-                            Text(
-                                text = if (isArabic) "أضف للسلة" else "Add to Cart",
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                            fontWeight = FontWeight.Bold,
+                            color = Navy900
+                        )
                     }
                 }
             }
         }
-    ) { innerPadding ->
+    ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(padding),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            // Product Hero Image
+            // Main Product Image
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .height(320.dp)
+                        .background(Color(0xFFF8FAFC)),
+                    contentAlignment = Alignment.Center
                 ) {
+                    val currentImg = images.getOrNull(selectedImageIndex) ?: product.imageUrl
                     AsyncImage(
-                        model = product.imageUrl,
-                        contentDescription = if (isArabic) product.nameAr else product.nameEn,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        model = currentImg,
+                        contentDescription = product.nameEn,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                            .testTag("product_detail_main_image")
                     )
 
-                    if (product.hasDiscount) {
+                    // Discount pill
+                    if (product.discountPercent > 0) {
                         Surface(
+                            shape = RoundedCornerShape(8.dp),
                             color = RoseRed,
-                            shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp),
                             modifier = Modifier
                                 .align(Alignment.TopStart)
-                                .padding(top = 16.dp)
+                                .padding(16.dp)
                         ) {
                             Text(
-                                text = if (isArabic) "خصم ${product.discountPercentage}%" else "${product.discountPercentage}% OFF",
+                                text = "-${product.discountPercent}% OFF",
                                 color = Color.White,
-                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                     }
                 }
             }
 
-            // Main Product Info
+            // Image Thumbnails (if multiple)
+            if (images.size > 1) {
+                item {
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(images.size) { idx ->
+                            val isSelected = idx == selectedImageIndex
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) GoldPrimary.copy(alpha = 0.2f) else Color(0xFFF1F5F9),
+                                shadowElevation = if (isSelected) 2.dp else 0.dp,
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { selectedImageIndex = idx }
+                            ) {
+                                AsyncImage(
+                                    model = images[idx],
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize().padding(4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Title, Price, Rating
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    if (product.brand.isNotBlank()) {
-                        Text(
-                            text = product.brand.uppercase(),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            letterSpacing = 1.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-
-                    Text(
-                        text = if (isArabic) product.nameAr else product.nameEn,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 26.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Rating & Reviews Count
+                    // Category & Brand
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Surface(
-                            color = GoldPrimary.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(4.dp),
+                            color = Navy900.copy(alpha = 0.08f)
+                        ) {
+                            Text(
+                                text = if (isArabic) product.categoryNameAr else product.categoryNameEn,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Navy900,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        if (product.brand.isNotBlank()) {
+                            Text(
+                                text = product.brand,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = if (isArabic) product.nameAr else product.nameEn,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Navy900
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Rating and review count
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = GoldPrimary.copy(alpha = 0.15f)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = null,
-                                    tint = GoldPrimary,
-                                    modifier = Modifier.size(15.dp)
+                                    tint = Color(0xFFD97706),
+                                    modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = String.format(java.util.Locale.US, "%.1f", product.rating),
+                                    text = String.format("%.1f", product.rating),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
-                                    color = GoldPrimary
+                                    fontSize = 13.sp,
+                                    color = Navy900
                                 )
                             }
                         }
 
                         Text(
-                            text = "(${reviews.size} " + (if (isArabic) "تقييمات)" else "reviews)"),
-                            fontSize = 12.sp,
-                            color = Color.Gray
+                            text = "(${product.ratingCount} ${if (isArabic) "تقييم" else "reviews"})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Spacer(modifier = Modifier.weight(1f))
 
                         // Stock indicator
-                        if (product.stock > 0) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = EmeraldGreen,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = if (isArabic) "متوفر بالمخزون (${product.stock})" else "In Stock (${product.stock})",
-                                    fontSize = 12.sp,
-                                    color = EmeraldGreen,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                        } else {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = if (product.stockQuantity > 5) EmeraldGreen.copy(alpha = 0.15f) else RoseRed.copy(alpha = 0.15f)
+                        ) {
                             Text(
-                                text = if (isArabic) "نفدت الكمية" else "Out of Stock",
+                                text = if (product.stockQuantity > 0) {
+                                    if (isArabic) "متوفر (${product.stockQuantity})" else "In Stock (${product.stockQuantity})"
+                                } else {
+                                    if (isArabic) "غير متوفر" else "Out of Stock"
+                                },
+                                color = if (product.stockQuantity > 5) EmeraldGreen else RoseRed,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
-                                color = RoseRed,
-                                fontWeight = FontWeight.Bold
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Price Section
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
                             text = viewModel.formatPrice(product.currentPrice),
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Navy900
                         )
 
-                        if (product.hasDiscount) {
-                            Spacer(modifier = Modifier.width(10.dp))
+                        if (product.originalPrice > product.currentPrice) {
                             Text(
-                                text = viewModel.formatPrice(product.originalPriceBhd),
-                                fontSize = 15.sp,
-                                color = Color.Gray,
-                                textDecoration = TextDecoration.LineThrough
+                                text = viewModel.formatPrice(product.originalPrice),
+                                style = MaterialTheme.typography.titleMedium,
+                                textDecoration = TextDecoration.LineThrough,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
+                            val savedAmount = product.originalPrice - product.currentPrice
                             Surface(
-                                color = EmeraldGreen.copy(alpha = 0.15f),
-                                shape = RoundedCornerShape(6.dp)
+                                shape = RoundedCornerShape(4.dp),
+                                color = EmeraldGreen.copy(alpha = 0.15f)
                             ) {
                                 Text(
-                                    text = if (isArabic) "وفر ${viewModel.formatPrice(product.originalPriceBhd - product.discountPriceBhd)}"
-                                    else "Save ${viewModel.formatPrice(product.originalPriceBhd - product.discountPriceBhd)}",
+                                    text = "${if (isArabic) "وفّر" else "Save"} ${viewModel.formatPrice(savedAmount)}",
                                     color = EmeraldGreen,
-                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Text(
+                        text = if (isArabic) "السعر يشمل ضريبة القيمة المضافة ${storeSettings.vatPercentage.toInt()}% بمملكة البحرين"
+                        else "Price includes ${storeSettings.vatPercentage.toInt()}% Bahrain VAT",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
 
-                    // Quantity Stepper
+            // Quantity Selector
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = if (isArabic) "الكمية المطلوبة:" else "Quantity:",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
+                            text = if (isArabic) "الكمية المطلوبة:" else "Select Quantity:",
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.bodyMedium
                         )
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
-                                .padding(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            IconButton(
-                                onClick = { if (quantity > 1) quantity-- },
-                                modifier = Modifier.size(32.dp)
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surface,
+                                shadowElevation = 1.dp,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clickable(enabled = quantity > 1) { quantity-- }
                             ) {
-                                Icon(imageVector = Icons.Default.Remove, contentDescription = "Decrease")
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Remove,
+                                        contentDescription = "Decrease",
+                                        tint = if (quantity > 1) Navy900 else Color.LightGray,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
 
                             Text(
-                                text = quantity.toString(),
-                                fontSize = 15.sp,
+                                text = "$quantity",
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 14.dp)
+                                modifier = Modifier.padding(horizontal = 4.dp)
                             )
 
-                            IconButton(
-                                onClick = { if (quantity < product.stock) quantity++ },
-                                modifier = Modifier.size(32.dp)
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surface,
+                                shadowElevation = 1.dp,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clickable(enabled = quantity < product.stockQuantity) { quantity++ }
                             ) {
-                                Icon(imageVector = Icons.Default.Add, contentDescription = "Increase")
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Increase",
+                                        tint = if (quantity < product.stockQuantity) Navy900 else Color.LightGray,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Benefits Banner
+            // Value Props (Bahrain Delivery, Warranty, Authentic)
             item {
-                Card(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.LocalShipping,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.LocalShipping, contentDescription = null, tint = Navy800, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = if (isArabic) "توصيل سريع خلال 24-48 ساعة داخل البحرين" else "Express 24-48h Delivery across Bahrain",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
+                                text = if (isArabic) "توصيل سريع" else "Express Delivery",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Navy900
+                            )
+                            Text(
+                                text = if (isArabic) "خلال 24 ساعة" else "Within 24h in BH",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Security,
-                                contentDescription = null,
-                                tint = EmeraldGreen,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                    }
+
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.Security, contentDescription = null, tint = EmeraldGreen, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = if (isArabic) "ضمان المتجر الرسمي والدفع عند الاستلام أو BenefitPay" else "Official Warranty, BenefitPay & Cash on Delivery Accepted",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
+                                text = if (isArabic) "ضمان أصلي" else "100% Genuine",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Navy900
+                            )
+                            Text(
+                                text = if (isArabic) "مع فاتورة رسمية" else "Official CR & Tax",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -469,60 +575,25 @@ fun ProductDetailScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Text(
-                        text = if (isArabic) "وصف المنتج" else "Product Description",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        text = if (isArabic) "تفاصيل المنتج ومواصفاته" else "Product Description & Specs",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Navy900
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = if (isArabic) product.descriptionAr else product.descriptionEn,
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyMedium,
                         lineHeight = 22.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
                     )
                 }
             }
 
-            // Specifications
-            if (product.specs.isNotBlank()) {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = if (isArabic) "المواصفات الفنية" else "Specifications",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                product.specs.split("\n").forEach { specLine ->
-                                    if (specLine.isNotBlank()) {
-                                        Text(
-                                            text = "• $specLine",
-                                            fontSize = 13.sp,
-                                            lineHeight = 20.sp,
-                                            modifier = Modifier.padding(vertical = 2.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Customer Reviews Section
+            // Reviews Section
             item {
                 Column(
                     modifier = Modifier
@@ -531,86 +602,81 @@ fun ProductDetailScreen(
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = if (isArabic) "تقييمات وآراء العملاء (${reviews.size})" else "Customer Reviews (${reviews.size})",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
+                            text = if (isArabic) "تقييمات العملاء (${reviews.size})" else "Customer Reviews (${reviews.size})",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Navy900
                         )
 
                         TextButton(
                             onClick = { showReviewDialog = true },
-                            modifier = Modifier.testTag("write_review_btn")
+                            modifier = Modifier.testTag("btn_write_review")
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.RateReview,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                            Text(
+                                text = if (isArabic) "اكتب تقييمك" else "Write a Review",
+                                color = Navy800,
+                                fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = if (isArabic) "أضف تقييمك" else "Write Review", fontSize = 12.sp)
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
 
                     if (reviews.isEmpty()) {
                         Text(
-                            text = if (isArabic) "كن أول من يكتب تقييماً لهذا المنتج الرائع!" else "Be the first to review this product!",
-                            fontSize = 13.sp,
-                            color = Color.Gray,
-                            modifier = Modifier.padding(vertical = 12.dp)
+                            text = if (isArabic) "لا توجد تقييمات حتى الآن. كن أول من يقيّم هذا المنتج!" else "No reviews yet. Be the first to review this product!",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 8.dp)
                         )
-                    }
-                }
-            }
-
-            items(reviews) { review ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = review.authorName,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
-                            )
-                            Text(
-                                text = review.dateString,
-                                fontSize = 11.sp,
-                                color = Color.Gray
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            repeat(5) { starIndex ->
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = null,
-                                    tint = if (starIndex < review.rating) GoldPrimary else Color.LightGray,
-                                    modifier = Modifier.size(14.dp)
-                                )
+                    } else {
+                        reviews.take(5).forEach { review ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = review.authorName,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Row {
+                                            repeat(review.rating) {
+                                                Icon(
+                                                    Icons.Default.Star,
+                                                    contentDescription = null,
+                                                    tint = Color(0xFFD97706),
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = review.comment,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = review.createdAt,
+                                        fontSize = 10.sp,
+                                        color = Color.Gray
+                                    )
+                                }
                             }
                         }
-
-                        Text(
-                            text = review.comment,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-                        )
                     }
                 }
             }
@@ -619,68 +685,68 @@ fun ProductDetailScreen(
 
     // Write Review Dialog
     if (showReviewDialog) {
+        var userRating by remember { mutableIntStateOf(5) }
+        var reviewText by remember { mutableStateOf("") }
+
         AlertDialog(
             onDismissRequest = { showReviewDialog = false },
             title = {
-                Text(text = if (isArabic) "أضف تقييمك للمنتج" else "Review this Product")
+                Text(text = if (isArabic) "أضف تقييمك للمنتج" else "Rate this Product")
             },
             text = {
                 Column {
                     Text(
                         text = if (isArabic) "اختر عدد النجوم:" else "Select Rating:",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
+                        style = MaterialTheme.typography.bodySmall
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                         (1..5).forEach { star ->
                             IconButton(onClick = { userRating = star }) {
                                 Icon(
                                     imageVector = Icons.Default.Star,
-                                    contentDescription = "$star Stars",
-                                    tint = if (star <= userRating) GoldPrimary else Color.LightGray,
-                                    modifier = Modifier.size(28.dp)
+                                    contentDescription = "$star stars",
+                                    tint = if (star <= userRating) Color(0xFFD97706) else Color.LightGray,
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     OutlinedTextField(
-                        value = userComment,
-                        onValueChange = { userComment = it },
+                        value = reviewText,
+                        onValueChange = { reviewText = it },
+                        label = { Text(if (isArabic) "رأيك في جودة المنتج والتوصيل..." else "Your feedback on quality & delivery...") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag("review_comment_input"),
-                        placeholder = {
-                            Text(
-                                text = if (isArabic) "شاركنا تجربتك مع جودة المنتج وسرعة التوصيل..." else "Share your experience with quality and delivery...",
-                                fontSize = 12.sp
-                            )
-                        },
-                        minLines = 3,
-                        maxLines = 5
+                            .height(110.dp)
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        if (userComment.isNotBlank()) {
-                            viewModel.submitReview(product.id, userRating, userComment)
+                        if (reviewText.isNotBlank()) {
+                            viewModel.submitReview(product.id, userRating, reviewText)
                             showReviewDialog = false
-                            userComment = ""
                         }
                     },
-                    modifier = Modifier.testTag("submit_review_dialog_btn")
+                    colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary)
                 ) {
-                    Text(text = if (isArabic) "إرسال التقييم" else "Submit")
+                    Text(
+                        text = if (isArabic) "إرسال التقييم" else "Submit",
+                        color = Navy900,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showReviewDialog = false }) {
-                    Text(text = if (isArabic) "إلغاء" else "Cancel")
+                    Text(if (isArabic) "إلغاء" else "Cancel")
                 }
             }
         )

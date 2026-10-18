@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,14 +20,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Discount
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -55,13 +54,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.data.model.Product
 import com.example.ui.theme.EmeraldGreen
 import com.example.ui.theme.GoldPrimary
+import com.example.ui.theme.Navy800
+import com.example.ui.theme.Navy900
 import com.example.ui.theme.RoseRed
 import com.example.ui.viewmodel.ShopViewModel
 
@@ -69,7 +69,8 @@ import com.example.ui.viewmodel.ShopViewModel
 fun CartScreen(
     viewModel: ShopViewModel,
     onNavigateToCheckout: () -> Unit,
-    onNavigateToHome: () -> Unit,
+    onNavigateToShop: () -> Unit,
+    onNavigateToProduct: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isArabic by viewModel.isArabic.collectAsState()
@@ -78,17 +79,17 @@ fun CartScreen(
     val couponError by viewModel.couponError.collectAsState()
     val storeSettings by viewModel.storeSettings.collectAsState()
 
-    var couponInputText by remember { mutableStateOf("") }
+    var couponInput by remember { mutableStateOf("") }
 
     val subtotal = cartWithProducts.sumOf { it.product.currentPrice * it.cartItem.quantity }
     val freeShippingThreshold = storeSettings.freeShippingThresholdBhd
     val isFreeShipping = subtotal >= freeShippingThreshold
-    val deliveryFee = if (isFreeShipping) 0.0 else storeSettings.defaultDeliveryFeeBhd
+    val shippingFee = if (isFreeShipping) 0.0 else storeSettings.defaultDeliveryFeeBhd
 
-    var discount = 0.0
+    var discountAmount = 0.0
     appliedCoupon?.let { coupon ->
         if (subtotal >= coupon.minSpendBhd) {
-            discount = if (coupon.isPercent) {
+            discountAmount = if (coupon.isPercent) {
                 subtotal * (coupon.discountPercent / 100.0)
             } else {
                 coupon.fixedDiscountBhd
@@ -96,132 +97,187 @@ fun CartScreen(
         }
     }
 
-    val vat = (subtotal - discount) * (storeSettings.vatPercentage / 100.0)
-    val total = maxOf(0.0, (subtotal - discount) + deliveryFee + vat)
+    val vatPercentage = storeSettings.vatPercentage
+    val taxableAmount = maxOf(0.0, subtotal - discountAmount)
+    val vatAmount = taxableAmount * (vatPercentage / 100.0)
+    val totalAmount = maxOf(0.0, taxableAmount + shippingFee + vatAmount)
 
-    if (cartWithProducts.isEmpty()) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(24.dp)
-                .testTag("empty_cart_container"),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .testTag("cart_screen"),
+        bottomBar = {
+            if (cartWithProducts.isNotEmpty()) {
                 Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(96.dp)
+                    shadowElevation = 10.dp,
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingBag,
-                            contentDescription = "Empty Cart",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp)
-                        )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = if (isArabic) "المبلغ الإجمالي النهائي" else "Grand Total (BHD)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = viewModel.formatPrice(totalAmount),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Navy900
+                                )
+                            }
+
+                            Button(
+                                onClick = onNavigateToCheckout,
+                                colors = ButtonDefaults.buttonColors(containerColor = GoldPrimary),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .height(50.dp)
+                                    .testTag("btn_proceed_to_checkout")
+                            ) {
+                                Text(
+                                    text = if (isArabic) "إتمام الطلب" else "Checkout",
+                                    color = Navy900,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Default.ArrowForward,
+                                    contentDescription = null,
+                                    tint = Navy900,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                Text(
-                    text = if (isArabic) "سلة التسوق فارغة حالياً" else "Your Shopping Cart is Empty",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = if (isArabic) "تصفح أحدث المنتجات والعروض الحصرية في البحرين" else "Explore Bahrain's latest deals and best-selling tech",
-                    fontSize = 13.sp,
-                    color = Color.Gray,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Button(
-                    onClick = onNavigateToHome,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.testTag("start_shopping_btn")
-                ) {
-                    Text(
-                        text = if (isArabic) "ابدأ التسوق الآن" else "Start Shopping",
-                        fontWeight = FontWeight.Bold
-                    )
                 }
             }
         }
-    } else {
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-        ) {
+    ) { padding ->
+        if (cartWithProducts.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Navy900.copy(alpha = 0.06f),
+                        modifier = Modifier.size(100.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = null,
+                                tint = Navy800,
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (isArabic) "سلة التسوق فارغة" else "Your Shopping Cart is Empty",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Navy900
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (isArabic) "تصفح أحدث المنتجات والعروض الرائعة وأضف ما يعجبك!" else "Explore our catalog, flash deals, and best-sellers now!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = onNavigateToShop,
+                        colors = ButtonDefaults.buttonColors(containerColor = Navy900),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.testTag("btn_start_shopping")
+                    ) {
+                        Text(
+                            text = if (isArabic) "ابدأ التسوق الآن" else "Start Shopping",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        } else {
             LazyColumn(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .testTag("cart_items_lazy_column"),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Free Delivery Progress Banner
+                // Free delivery banner / progress
                 item {
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isFreeShipping) EmeraldGreen.copy(alpha = 0.12f) else MaterialTheme.colorScheme.primaryContainer
+                            containerColor = if (isFreeShipping) EmeraldGreen.copy(alpha = 0.12f) else GoldPrimary.copy(alpha = 0.15f)
                         )
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
-                                    imageVector = if (isFreeShipping) Icons.Default.CheckCircle else Icons.Default.LocalShipping,
+                                    imageVector = Icons.Default.LocalShipping,
                                     contentDescription = null,
-                                    tint = if (isFreeShipping) EmeraldGreen else MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
+                                    tint = if (isFreeShipping) EmeraldGreen else Navy900,
+                                    modifier = Modifier.size(20.dp)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = if (isFreeShipping) {
-                                        if (isArabic) "مبروك! مؤهل للتوصيل المجاني في البحرين 🎉" else "Congratulations! You've unlocked FREE delivery in Bahrain 🎉"
+                                        if (isArabic) "مبروك! مؤهل للتوصيل المجاني داخل البحرين" else "Congrats! You unlocked FREE Bahrain Delivery!"
                                     } else {
                                         val remaining = freeShippingThreshold - subtotal
-                                        if (isArabic) "أضف ${viewModel.formatPrice(remaining)} أخرى للتوصيل المجاني!"
-                                        else "Add ${viewModel.formatPrice(remaining)} more for FREE Delivery!"
+                                        if (isArabic) "أضف ${viewModel.formatPrice(remaining)} للحصول على توصيل مجاني!"
+                                        else "Add ${viewModel.formatPrice(remaining)} more for FREE Bahrain delivery!"
                                     },
-                                    fontSize = 12.sp,
+                                    style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isFreeShipping) EmeraldGreen else MaterialTheme.colorScheme.onPrimaryContainer
+                                    color = if (isFreeShipping) EmeraldGreen else Navy900
                                 )
                             }
 
                             if (!isFreeShipping) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                val progress = (subtotal / freeShippingThreshold).coerceIn(0.0, 1.0).toFloat()
+                                val progress = (subtotal / freeShippingThreshold).toFloat().coerceIn(0f, 1f)
                                 LinearProgressIndicator(
                                     progress = { progress },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(6.dp)
                                         .clip(RoundedCornerShape(3.dp)),
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = GoldPrimary,
+                                    trackColor = Color(0xFFE2E8F0)
                                 )
                             }
                         }
                     }
                 }
 
-                // Cart Product Items
+                // Cart Items
                 items(cartWithProducts, key = { it.cartItem.id }) { itemWithProduct ->
                     val product = itemWithProduct.product
                     val cartItem = itemWithProduct.cartItem
@@ -229,10 +285,11 @@ fun CartScreen(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 6.dp)
-                            .testTag("cart_item_card_${product.id}"),
+                            .clickable { onNavigateToProduct(product) }
+                            .testTag("cart_item_${cartItem.id}"),
+                        shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        shape = RoundedCornerShape(14.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -242,11 +299,12 @@ fun CartScreen(
                         ) {
                             AsyncImage(
                                 model = product.imageUrl,
-                                contentDescription = if (isArabic) product.nameAr else product.nameEn,
+                                contentDescription = product.nameEn,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .size(76.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFF1F5F9))
                             )
 
                             Spacer(modifier = Modifier.width(12.dp))
@@ -254,271 +312,235 @@ fun CartScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = if (isArabic) product.nameAr else product.nameEn,
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
+                                    color = Navy900
                                 )
-
                                 Spacer(modifier = Modifier.height(4.dp))
-
                                 Text(
                                     text = viewModel.formatPrice(product.currentPrice),
-                                    fontSize = 13.sp,
+                                    style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = Navy800
                                 )
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // Quantity Controls & Remove
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier.fillMaxWidth()
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = Color(0xFFF1F5F9),
                                         modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                                            .size(28.dp)
+                                            .clickable {
+                                                if (cartItem.quantity > 1) {
+                                                    viewModel.updateCartQuantity(cartItem.id, cartItem.quantity - 1)
+                                                } else {
+                                                    viewModel.removeFromCart(cartItem.id)
+                                                }
+                                            }
                                     ) {
-                                        IconButton(
-                                            onClick = { viewModel.updateCartQuantity(cartItem.id, cartItem.quantity - 1) },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(imageVector = Icons.Default.Remove, contentDescription = "Decrease", modifier = Modifier.size(16.dp))
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.Remove,
+                                                contentDescription = "Decrease",
+                                                tint = Navy900,
+                                                modifier = Modifier.size(14.dp)
+                                            )
                                         }
+                                    }
 
-                                        Text(
-                                            text = cartItem.quantity.toString(),
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 8.dp)
-                                        )
+                                    Text(
+                                        text = "${cartItem.quantity}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
 
-                                        IconButton(
-                                            onClick = {
-                                                if (cartItem.quantity < product.stock) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = Color(0xFFF1F5F9),
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clickable {
+                                                if (cartItem.quantity < product.stockQuantity) {
                                                     viewModel.updateCartQuantity(cartItem.id, cartItem.quantity + 1)
                                                 }
-                                            },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(imageVector = Icons.Default.Add, contentDescription = "Increase", modifier = Modifier.size(16.dp))
+                                            }
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.Add,
+                                                contentDescription = "Increase",
+                                                tint = Navy900,
+                                                modifier = Modifier.size(14.dp)
+                                            )
                                         }
                                     }
-
-                                    IconButton(
-                                        onClick = { viewModel.removeFromCart(cartItem.id) },
-                                        modifier = Modifier.size(32.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Remove",
-                                            tint = RoseRed,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
                                 }
+                            }
+
+                            IconButton(
+                                onClick = { viewModel.removeFromCart(cartItem.id) },
+                                modifier = Modifier.testTag("btn_remove_cart_item_${cartItem.id}")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "Remove",
+                                    tint = RoseRed
+                                )
                             }
                         }
                     }
                 }
 
-                // Coupon / Promo Code Card
+                // Coupon Entry Section
                 item {
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 10.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Discount,
-                                    contentDescription = null,
-                                    tint = GoldPrimary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = if (isArabic) "كود الخصم والكوبونات" else "Apply Discount Coupon",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Text(
+                                text = if (isArabic) "كود الخصم / الكوبون الترويجي" else "Promo Code / Discount Coupon",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold
+                            )
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             if (appliedCoupon != null) {
-                                Surface(
-                                    color = EmeraldGreen.copy(alpha = 0.15f),
-                                    shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(EmeraldGreen.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Row(
-                                        modifier = Modifier.padding(10.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = EmeraldGreen)
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Column {
-                                                Text(
-                                                    text = "${appliedCoupon?.code} " + (if (isArabic) "مفعل" else "Applied"),
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 13.sp,
-                                                    color = EmeraldGreen
-                                                )
-                                                Text(
-                                                    text = if (isArabic) appliedCoupon?.descriptionAr.orEmpty() else appliedCoupon?.descriptionEn.orEmpty(),
-                                                    fontSize = 11.sp
-                                                )
-                                            }
-                                        }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Percent,
+                                            contentDescription = null,
+                                            tint = EmeraldGreen,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "${appliedCoupon!!.code} (${appliedCoupon!!.descriptionEn})",
+                                            fontWeight = FontWeight.Bold,
+                                            color = EmeraldGreen,
+                                            fontSize = 13.sp
+                                        )
+                                    }
 
-                                        IconButton(onClick = { viewModel.removeCoupon() }) {
-                                            Icon(imageVector = Icons.Default.Close, contentDescription = "Remove coupon", tint = Color.Gray)
-                                        }
+                                    IconButton(
+                                        onClick = { viewModel.removeCoupon() },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Remove coupon",
+                                            tint = RoseRed,
+                                            modifier = Modifier.size(16.dp)
+                                        )
                                     }
                                 }
                             } else {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     OutlinedTextField(
-                                        value = couponInputText,
-                                        onValueChange = { couponInputText = it.uppercase() },
-                                        placeholder = { Text(if (isArabic) "أدخل الكود (مثال: MASHOP10)" else "Enter code (e.g. MASHOP10)", fontSize = 12.sp) },
+                                        value = couponInput,
+                                        onValueChange = { couponInput = it.uppercase() },
+                                        placeholder = { Text(if (isArabic) "رمز الكوبون (مثل BAHRAIN10)" else "Coupon code (e.g. BAHRAIN10)") },
                                         singleLine = true,
-                                        shape = RoundedCornerShape(10.dp),
                                         modifier = Modifier
                                             .weight(1f)
-                                            .testTag("coupon_input_field")
+                                            .height(52.dp)
                                     )
-
-                                    Spacer(modifier = Modifier.width(8.dp))
 
                                     Button(
                                         onClick = {
-                                            if (couponInputText.isNotBlank()) {
-                                                viewModel.applyCoupon(couponInputText)
-                                            }
+                                            viewModel.applyCoupon(couponInput.trim())
                                         },
-                                        shape = RoundedCornerShape(10.dp),
-                                        modifier = Modifier.testTag("apply_coupon_btn")
+                                        colors = ButtonDefaults.buttonColors(containerColor = Navy900),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.height(52.dp)
                                     ) {
-                                        Text(text = if (isArabic) "تطبيق" else "Apply")
+                                        Text(if (isArabic) "تطبيق" else "Apply", color = Color.White)
                                     }
                                 }
 
                                 if (couponError != null) {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = couponError.orEmpty(),
+                                        text = couponError!!,
                                         color = RoseRed,
-                                        fontSize = 11.sp
+                                        fontSize = 12.sp
                                     )
-                                }
-
-                                // Quick suggestion chips for active coupons
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    listOf("MASHOP10", "BAHRAIN25", "WELCOME").forEach { code ->
-                                        Surface(
-                                            color = MaterialTheme.colorScheme.surfaceVariant,
-                                            shape = RoundedCornerShape(6.dp),
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(6.dp))
-                                                .clickable {
-                                                    couponInputText = code
-                                                    viewModel.applyCoupon(code)
-                                                }
-                                        ) {
-                                            Text(
-                                                text = code,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
-                                            )
-                                        }
-                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                // Order Price Breakdown Card
+                // Price Summary Breakdown
                 item {
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                     ) {
-                        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = if (isArabic) "ملخص الحساب" else "Order Summary",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                                text = if (isArabic) "ملخص التكلفة" else "Order Summary",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Navy900
                             )
 
-                            Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(text = if (isArabic) "المجموع الفرعي" else "Subtotal", fontSize = 13.sp, color = Color.Gray)
-                                Text(text = viewModel.formatPrice(subtotal), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            }
+                            SummaryRow(
+                                title = if (isArabic) "المجموع الفرعي" else "Subtotal",
+                                value = viewModel.formatPrice(subtotal)
+                            )
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(text = if (isArabic) "رسوم التوصيل" else "Delivery Charges", fontSize = 13.sp, color = Color.Gray)
-                                if (isFreeShipping) {
-                                    Text(
-                                        text = if (isArabic) "مجاني" else "FREE",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = EmeraldGreen
-                                    )
-                                } else {
-                                    Text(text = viewModel.formatPrice(deliveryFee), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                }
-                            }
-
-                            if (discount > 0) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(text = if (isArabic) "خصم الكوبون" else "Coupon Discount", fontSize = 13.sp, color = EmeraldGreen)
-                                    Text(text = "-${viewModel.formatPrice(discount)}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = EmeraldGreen)
-                                }
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = if (isArabic) "ضريبة القيمة المضافة (${storeSettings.vatPercentage.toInt()}%)" else "VAT (${storeSettings.vatPercentage.toInt()}%)",
-                                    fontSize = 13.sp,
-                                    color = Color.Gray
+                            if (discountAmount > 0) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                SummaryRow(
+                                    title = if (isArabic) "خصم الكوبون" else "Discount",
+                                    value = "-${viewModel.formatPrice(discountAmount)}",
+                                    valueColor = EmeraldGreen
                                 )
-                                Text(text = viewModel.formatPrice(vat), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             }
 
-                            Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+                            Spacer(modifier = Modifier.height(6.dp))
+                            SummaryRow(
+                                title = if (isArabic) "رسوم التوصيل (مملكة البحرين)" else "Delivery Fee (Bahrain)",
+                                value = if (shippingFee == 0.0) {
+                                    if (isArabic) "مجاني" else "FREE"
+                                } else {
+                                    viewModel.formatPrice(shippingFee)
+                                },
+                                valueColor = if (shippingFee == 0.0) EmeraldGreen else MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+                            SummaryRow(
+                                title = if (isArabic) "ضريبة القيمة المضافة (${vatPercentage.toInt()}%)" else "VAT (${vatPercentage.toInt()}%)",
+                                value = viewModel.formatPrice(vatAmount)
+                            )
+
+                            Divider(modifier = Modifier.padding(vertical = 12.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -526,65 +548,37 @@ fun CartScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (isArabic) "الإجمالي النهائي" else "Final Total",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.ExtraBold
+                                    text = if (isArabic) "المبلغ النهائي" else "Final Total",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Navy900
                                 )
                                 Text(
-                                    text = viewModel.formatPrice(total),
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.primary
+                                    text = viewModel.formatPrice(totalAmount),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Navy900
                                 )
                             }
                         }
                     }
                 }
             }
-
-            // Bottom Sticky Checkout Bar
-            Surface(
-                shadowElevation = 8.dp,
-                color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = if (isArabic) "الإجمالي (شامل الضريبة)" else "Total (Inc. VAT)",
-                            fontSize = 11.sp,
-                            color = Color.Gray
-                        )
-                        Text(
-                            text = viewModel.formatPrice(total),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Button(
-                        onClick = onNavigateToCheckout,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .height(48.dp)
-                            .testTag("checkout_button")
-                    ) {
-                        Text(
-                            text = if (isArabic) "متابعة الشراء والدفع" else "Proceed to Checkout",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
         }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    title: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = title, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = valueColor)
     }
 }

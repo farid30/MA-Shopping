@@ -31,6 +31,23 @@ data class ChatMessage(
     val time: String = "Now"
 )
 
+data class ShopConceptPreset(
+    val id: String,
+    val nameEn: String,
+    val nameAr: String,
+    val taglineEn: String,
+    val taglineAr: String,
+    val addressEn: String,
+    val addressAr: String,
+    val phone: String,
+    val email: String,
+    val crNumber: String,
+    val vatNumber: String,
+    val currencyCode: String = "BHD",
+    val currencySymbolAr: String = "د.ب",
+    val instagram: String = "@mashopping.bh"
+)
+
 enum class ProductSortOption {
     DEFAULT,
     PRICE_LOW_TO_HIGH,
@@ -173,7 +190,6 @@ class ShopViewModel(application: Application) : AndroidViewModel(application) {
     val unreadNotificationsCount: StateFlow<Int> = repository.getUnreadNotificationCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    // Coupons for Admin & Promos
     val allCoupons: StateFlow<List<Coupon>> = repository.getAllCoupons()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -229,9 +245,246 @@ class ShopViewModel(application: Application) : AndroidViewModel(application) {
         showSnackbar(if (_isArabic.value) "تم حفظ الملف الشخصي" else "Profile updated successfully")
     }
 
+    val shopPresets = listOf(
+        ShopConceptPreset(
+            id = "preset_general",
+            nameEn = "MA Shopping",
+            nameAr = "إم إيه للتسوق",
+            taglineEn = "Bahrain's Premier Online Store",
+            taglineAr = "وجهتك الأولى للتسوق في البحرين",
+            addressEn = "Building 450, Road 2814, Block 328, Manama, Bahrain",
+            addressAr = "مبنى 450، طريق 2814، مجمع 328، المنامة، مملكة البحرين",
+            phone = "+973 1700 8899",
+            email = "support@mashopping.bh",
+            crNumber = "CR-984321-BH",
+            vatNumber = "TRN-200084930100003",
+            currencyCode = "BHD",
+            currencySymbolAr = "د.ب",
+            instagram = "@mashopping.bh"
+        ),
+        ShopConceptPreset(
+            id = "preset_tech",
+            nameEn = "MA Tech Hub",
+            nameAr = "إم إيه لتكنولوجيا المستقبل",
+            taglineEn = "Smart Electronics & Premium Mobile Store",
+            taglineAr = "أحدث الهواتف الذكية والإلكترونيات الفاخرة بالبحرين",
+            addressEn = "Seef District, Al-Moayyed Tower, Fl 12, Manama",
+            addressAr = "ضاحية السيف، برج المؤيد، طابق 12، المنامة",
+            phone = "+973 1755 4920",
+            email = "tech@mashopping.bh",
+            crNumber = "CR-874211-BH",
+            vatNumber = "TRN-200049210000003",
+            currencyCode = "BHD",
+            currencySymbolAr = "د.ب",
+            instagram = "@matech.bh"
+        ),
+        ShopConceptPreset(
+            id = "preset_luxury",
+            nameEn = "MA Luxury Boutique",
+            nameAr = "إم إيه بوتيك الفخامة",
+            taglineEn = "High-End Watches, Perfumes & Designer Style",
+            taglineAr = "ساعات فاخرة، عطور العود الملكية وأزياء راقية",
+            addressEn = "Moda Mall, Bahrain World Trade Center, Manama",
+            addressAr = "مودا مول، مركز البحرين التجاري العالمي، المنامة",
+            phone = "+973 1722 9001",
+            email = "vip@mashopping.bh",
+            crNumber = "CR-652199-BH",
+            vatNumber = "TRN-200065219900003",
+            currencyCode = "BHD",
+            currencySymbolAr = "د.ب",
+            instagram = "@maluxury.bh"
+        ),
+        ShopConceptPreset(
+            id = "preset_souq",
+            nameEn = "MA Gulf Souq",
+            nameAr = "سوق الخليج إم إيه",
+            taglineEn = "Everything for Family, Home & Daily Living",
+            taglineAr = "كل ما تحتاجه الأسرة والمنزل مع توصيل سريع",
+            addressEn = "Oasis Mall, Juffair / Riffa Avenue, Bahrain",
+            addressAr = "الواحة مول، الجفير / شارع الرفاع، البحرين",
+            phone = "+973 1780 3344",
+            email = "souq@mashopping.bh",
+            crNumber = "CR-410982-BH",
+            vatNumber = "TRN-200041098200003",
+            currencyCode = "BHD",
+            currencySymbolAr = "د.ب",
+            instagram = "@gulfsouq.bh"
+        ),
+        ShopConceptPreset(
+            id = "preset_express",
+            nameEn = "MA Express Market",
+            nameAr = "إم إيه إكسبرس ماركت",
+            taglineEn = "Ultra Fast 1-Hour Delivery Across Bahrain",
+            taglineAr = "توصيل فائق السرعة لجميع مناطق المملكة",
+            addressEn = "Central Logistics Hub, Hidd Industrial Zone, Bahrain",
+            addressAr = "مركز التوزيع الرئيسي، منطقة الحد الصناعية، البحرين",
+            phone = "+973 3999 1234",
+            email = "express@mashopping.bh",
+            crNumber = "CR-990142-BH",
+            vatNumber = "TRN-200099014200003",
+            currencyCode = "BHD",
+            currencySymbolAr = "د.ب",
+            instagram = "@maexpress.bh"
+        )
+    )
+
+    data class ShopNiche(
+        val key: String,
+        val labelEn: String,
+        val labelAr: String,
+        val namesEn: List<String>,
+        val namesAr: List<String>,
+        val taglinesEn: List<String>,
+        val taglinesAr: List<String>
+    )
+
+    val shopNiches = listOf(
+        ShopNiche(
+            key = "tech",
+            labelEn = "Tech & Gadgets",
+            labelAr = "التكنولوجيا والإلكترونيات",
+            namesEn = listOf("Pearl Tech Hub", "Bahrain Silicon Valley", "NextGen Mobile & Electronics", "FutureTech Bahrain", "Dilmun Digital Oasis"),
+            namesAr = listOf("واحة التكنولوجيا الذكية", "سيليكون البحرين للإلكترونيات", "نكست جن للهواتف والأجهزة", "فيوتشر تك البحرين", "دلمون للأجهزة الرقمية"),
+            taglinesEn = listOf("Smart electronics, gadgets & genuine mobile accessories in Bahrain", "Your premium destination for the latest smartphones and gaming laptops"),
+            taglinesAr = listOf("أحدث الأجهزة الذكية وملحقات الهواتف الأصلية في البحرين", "وجهتك الموثوقة لأحدث الهواتف الذكية وحواسيب الألعاب الاحترافية")
+        ),
+        ShopNiche(
+            key = "luxury",
+            labelEn = "Luxury & Perfumes",
+            labelAr = "العطور والفخامة",
+            namesEn = listOf("Royal Dilmun Perfumes", "Danat Al Bahrain Jewels", "Manama Prestige Boutique", "Oudh & Amber Palace", "Elite Gulf Luxury"),
+            namesAr = listOf("عطور دلمون الملكية", "مجوهرات دانات البحرين", "بوتيك المنامة برستيج", "قصر العود والعنبر", "نخبة الخليج للفخامة"),
+            taglinesEn = listOf("Authentic Royal Cambodian Oudh, French perfumes & Swiss timepieces", "Elegance defined by Bahraini heritage and bespoke craftsmanship"),
+            taglinesAr = listOf("أرقى دهن العود الكمبودي الملكي، العطور الباريسية والساعات السويسرية", "فخامة وأناقة مستوحاة من عراقة التراث البحريني")
+        ),
+        ShopNiche(
+            key = "fashion",
+            labelEn = "Fashion & Abaya",
+            labelAr = "الأزياء والعبايات",
+            namesEn = listOf("Dana Couture Bahrain", "Al Reem Haute Elegance", "Luluah Modest & Modern", "Riffa Silk Atelier", "Zallaq Fashion House"),
+            namesAr = listOf("دانة كوتور البحرين", "دار الريم للأزياء الراقية", "لؤلؤة للأناقة المعاصرة", "مشغل الرفاع للحرير", "دار الزلاق للأزياء"),
+            taglinesEn = listOf("Designer abayas, evening wear & contemporary Bahraini fashion", "Chic silhouettes tailored for modern Gulf lifestyle"),
+            taglinesAr = listOf("تصاميم عبايات راقية، فساتين مناسبات وأزياء خليجية عصرية", "أناقة محتشمة وفاخرة تلبي ذوق المرأة الخليجية")
+        ),
+        ShopNiche(
+            key = "souq",
+            labelEn = "Traditional Souq",
+            labelAr = "السوق التقليدي والمنزل",
+            namesEn = listOf("Bab Al Bahrain Grand Souq", "Muharraq Heritage Emporium", "Gulf Traditional Provisions", "Al Nakheel Home & Spices", "Manama Central Bazaar"),
+            namesAr = listOf("سوق باب البحرين الكبير", "متجر المحرق للتراث والتقاليد", "تموينات الخليج الأصيلة", "النخيل للمستلزمات والبهارات", "بازار المنامة المركزي"),
+            taglinesEn = listOf("Authentic Bahraini spices, halwa, home essentials and giftware", "Everything your family needs with same-day express doorstep delivery"),
+            taglinesAr = listOf("بهارات بحرينية أصلية، حلوى شويطر، مستلزمات المنزل والهدايا", "كل ما يحتاجه بيتك وعائلتك مع توصيل سريع ومباشر لباب المنزل")
+        ),
+        ShopNiche(
+            key = "coffee",
+            labelEn = "Coffee & Roastery",
+            labelAr = "القهوة والمحمصة المختصة",
+            namesEn = listOf("Dilmun Specialty Roasters", "Qahwa Artisans Bahrain", "The Arabian Bean Co.", "Capital Single Origin Coffee", "Falcon Brew Roastery"),
+            namesAr = listOf("محمصة دلمون المختصة", "حرفيو القهوة البحرينية", "شركة البن العربي الفاخر", "كابيتال للقهوة المختصة", "محمصة صقر الخليج"),
+            taglinesEn = listOf("Artisanal roasted beans, specialty espresso beans and brewing equipment", "From world origins straight to your cup in Bahrain"),
+            taglinesAr = listOf("حبوب بن محمصة بعناية، محاصيل قهوة مختصة وأدوات باريستا احترافية", "من أرقى مزارع العالم مباشرة إلى فنجانك في البحرين")
+        ),
+        ShopNiche(
+            key = "sports",
+            labelEn = "Sports & Fitness",
+            labelAr = "الرياضة واللياقة البدنية",
+            namesEn = listOf("Iron Gulf Performance", "Bahrain Active Gear", "Apex Fitness & Gym Supply", "Oasis Sports Nutrition", "Al Dana Athletic Hub"),
+            namesAr = listOf("أيرون جلف للأداء الرياضي", "بحرين أكتيف للمعدات", "أبيكس لتجهيزات اللياقة البدنية", "واحة المكملات الرياضية", "نادي الدانة للرياضة"),
+            taglinesEn = listOf("Gym equipment, sports apparel and certified fitness nutrition in Bahrain", "Fuel your athletic ambitions with top global brands"),
+            taglinesAr = listOf("أجهزة رياضية، ملابس تدريب وأجود المكملات الغذائية المعتمدة في البحرين", "حقق أهدافك الرياضية مع أفضل العلامات العالمية")
+        )
+    )
+
+    private val bahrainAreas = listOf(
+        Pair("Seef District, Road 2804, Building 1420, Manama", "ضاحية السيف، طريق 2804، مبنى 1420، المنامة"),
+        Pair("Amwaj Islands, Lagoon Avenue, Building 88, Muharraq", "جزر أمواج، ممشى اللاغون، مبنى 88، المحرق"),
+        Pair("Riffa Views, Park Avenue, Road 3912, Block 939, Riffa", "رفاع فيوز، شارع الحدائق، طريق 3912، مجمع 939، الرفاع"),
+        Pair("Saar Central, Avenue 25, Block 525, Northern Governorate", "سار سنترال، شارع 25، مجمع 525، المحافظة الشمالية"),
+        Pair("Diplomatic Area, Building 210, Road 1704, Block 317, Manama", "المنطقة الدبلوماسية، مبنى 210، طريق 1704، مجمع 317، المنامة"),
+        Pair("Juffair Boulevard, Road 4015, Building 772, Capital", "جفير بوليفارد، طريق 4015، مبنى 772، محافظة العاصمة"),
+        Pair("Busaiteen Promenade, Road 2210, Block 228, Muharraq", "ممشى البسيتين، طريق 2210، مجمع 228، المحرق"),
+        Pair("Zallaq Beach Highway, Block 1056, Southern Governorate", "شارع شاطئ الزلاق، مجمع 1056، المحافظة الجنوبية")
+    )
+
+    fun generateCustomShopDetails(nicheKey: String? = null): ShopConceptPreset {
+        val niche = if (nicheKey != null) {
+            shopNiches.find { it.key == nicheKey } ?: shopNiches.random()
+        } else {
+            shopNiches.random()
+        }
+
+        val idx = (0 until niche.namesEn.size).random()
+        val nameEn = niche.namesEn[idx]
+        val nameAr = niche.namesAr[idx]
+        val taglineEn = niche.taglinesEn.random()
+        val taglineAr = niche.taglinesAr.random()
+        val addressPair = bahrainAreas.random()
+
+        val randomCr = "CR-${(100000..999999).random()}-BH"
+        val randomVat = "TRN-2000${(10000000..99999999).random()}003"
+        val randomPhone = if (kotlin.random.Random.nextBoolean()) {
+            "+973 17${(100000..999999).random()}"
+        } else {
+            "+973 3${(2000000..9999999).random()}"
+        }
+        val cleanDomain = nameEn.lowercase().replace("[^a-z0-9]".toRegex(), "")
+        val email = "contact@$cleanDomain.bh"
+        val instagram = "@$cleanDomain.bh"
+
+        return ShopConceptPreset(
+            id = "custom_${System.currentTimeMillis()}",
+            nameEn = nameEn,
+            nameAr = nameAr,
+            taglineEn = taglineEn,
+            taglineAr = taglineAr,
+            addressEn = addressPair.first,
+            addressAr = addressPair.second,
+            phone = randomPhone,
+            email = email,
+            crNumber = randomCr,
+            vatNumber = randomVat,
+            currencyCode = "BHD",
+            currencySymbolAr = "د.ب",
+            instagram = instagram
+        )
+    }
+
+    fun generateAndApplyCustomShop(nicheKey: String? = null): ShopConceptPreset {
+        val preset = generateCustomShopDetails(nicheKey)
+        applyShopConcept(preset)
+        return preset
+    }
+
+    fun applyShopConcept(preset: ShopConceptPreset) {
+        val current = storeSettings.value
+        val updated = current.copy(
+            shopNameEn = preset.nameEn,
+            shopNameAr = preset.nameAr,
+            shopTaglineEn = preset.taglineEn,
+            shopTaglineAr = preset.taglineAr,
+            shopAddressEn = preset.addressEn,
+            shopAddressAr = preset.addressAr,
+            storeContactPhone = preset.phone,
+            storeContactEmail = preset.email,
+            commercialRegistrationNumber = preset.crNumber,
+            vatRegistrationNumber = preset.vatNumber,
+            currencyCode = preset.currencyCode,
+            currencySymbolAr = preset.currencySymbolAr,
+            instagramHandle = preset.instagram
+        )
+        adminSaveSettings(updated)
+        showSnackbar(if (_isArabic.value) "تم تطبيق هوية المتجر: ${preset.nameAr}" else "Applied shop branding: ${preset.nameEn}")
+    }
+
+    fun generateRandomShopConcept() {
+        generateAndApplyCustomShop(null)
+    }
+
     fun formatPrice(amount: Double): String {
         val formatted = String.format(Locale.US, "%.3f", amount)
-        return if (_isArabic.value) "$formatted د.ب" else "$formatted BHD"
+        val settings = storeSettings.value
+        val symbol = if (_isArabic.value) settings.currencySymbolAr else settings.currencyCode
+        return "$formatted $symbol"
     }
 
     // Search and Category
@@ -445,7 +698,9 @@ class ShopViewModel(application: Application) : AndroidViewModel(application) {
         val userMsg = ChatMessage(sender = "CUSTOMER", text = text)
         _chatMessages.value = _chatMessages.value + userMsg
 
-        // Auto-reply simulating MA Shopping Customer Service in Bahrain
+        val currentStoreName = storeSettings.value.shopNameEn
+        val currentPhone = storeSettings.value.storeContactPhone
+
         viewModelScope.launch {
             kotlinx.coroutines.delay(1000)
             val replyText = when {
@@ -456,7 +711,7 @@ class ShopViewModel(application: Application) : AndroidViewModel(application) {
                 text.contains("return", ignoreCase = true) || text.contains("cancel", ignoreCase = true) || text.contains("إرجاع", ignoreCase = true) ->
                     "Items can be returned or exchanged within 14 days in original sealed condition per Bahrain consumer protection regulations."
                 else ->
-                    "Thank you for reaching out! A dedicated MA Shopping representative is reviewing your message. For immediate WhatsApp assistance, reach us at +973 1700 8899."
+                    "Thank you for contacting $currentStoreName! A customer care specialist is reviewing your message. For instant WhatsApp assistance, reach us at $currentPhone."
             }
             _chatMessages.value = _chatMessages.value + ChatMessage(sender = "SUPPORT", text = replyText)
         }

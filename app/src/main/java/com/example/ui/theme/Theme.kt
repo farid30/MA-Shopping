@@ -50,7 +50,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun MyApplicationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Use our signature MA Shopping branding by default
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
@@ -67,4 +67,13 @@ fun MyApplicationTheme(
         typography = Typography,
         content = content
     )
+}
+
+@Composable
+fun MAShoppingTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    MyApplicationTheme(darkTheme = darkTheme, dynamicColor = dynamicColor, content = content)
 }

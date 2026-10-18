@@ -1,0 +1,24 @@
+===================================================================
+MA Shopping - Android Application Package (APK) Installation Guide
+===================================================================
+
+This folder contains the pre-compiled Android APK ready for installation on any Android phone or tablet:
+
+1. Files included:
+   - apk/app-debug.apk (Direct installable debug APK package)
+   - apk/MA-Shopping-v1.0.apk (Identical copy with versioned filename)
+   - ./app-debug.apk (Root-level copy for convenience)
+
+2. How to install on your Android device:
+   Step 1: Transfer 'app-debug.apk' to your Android device via USB cable, Google Drive, WhatsApp, Telegram, or direct download.
+   Step 2: On your phone, tap the downloaded APK file.
+   Step 3: If prompted with "Install unknown apps", tap Settings and toggle ON "Allow from this source".
+   Step 4: Tap "Install" to complete the installation.
+   Step 5: Open "MA Shopping" from your home screen or app drawer!
+
+3. Generating a fresh APK anytime in Google AI Studio:
+   - Click the top right settings / export menu in Google AI Studio.
+   - Choose "Export Project" (download full ZIP containing this apk folder)
+     or "Generate APK / AAB".
+   - Or in terminal run: gradle assembleDebug
+===================================================================

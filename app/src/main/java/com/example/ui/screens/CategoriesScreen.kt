@@ -1,6 +1,5 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -14,18 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -61,7 +57,9 @@ fun CategoriesScreen(
     val minRatingFilter by viewModel.minRatingFilter.collectAsState()
     val filteredProducts by viewModel.filteredProducts.collectAsState()
     val wishlistItems by viewModel.wishlistItems.collectAsState()
+    val storeSettings by viewModel.storeSettings.collectAsState()
     val wishlistedIds = wishlistItems.map { it.productId }.toSet()
+    val currency = if (isArabic) storeSettings.currencySymbolAr else storeSettings.currencyCode
 
     LazyColumn(
         modifier = modifier
@@ -69,7 +67,6 @@ fun CategoriesScreen(
             .testTag("categories_screen_lazy_column"),
         contentPadding = PaddingValues(bottom = 90.dp)
     ) {
-        // Categories Horizontal Selector
         item {
             Column(
                 modifier = Modifier
@@ -126,7 +123,6 @@ fun CategoriesScreen(
             }
         }
 
-        // Sorting & Rating Filter Chips Row
         item {
             Column(
                 modifier = Modifier
@@ -140,12 +136,7 @@ fun CategoriesScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Sort,
-                        contentDescription = "Sort",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(imageVector = Icons.Default.Sort, contentDescription = "Sort", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
 
                     FilterChip(
                         selected = sortOption == ProductSortOption.DEFAULT,
@@ -171,7 +162,6 @@ fun CategoriesScreen(
                         label = { Text(if (isArabic) "الأعلى تقييماً" else "Top Rated", fontSize = 11.sp) }
                     )
 
-                    // 4+ Star rating filter
                     FilterChip(
                         selected = minRatingFilter >= 4.0,
                         onClick = {
@@ -179,12 +169,7 @@ fun CategoriesScreen(
                             else viewModel.setMinRatingFilter(4.0)
                         },
                         leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = GoldPrimary,
-                                modifier = Modifier.size(14.dp)
-                            )
+                            Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(14.dp))
                         },
                         label = { Text("4.0+ ★", fontSize = 11.sp) }
                     )
@@ -201,28 +186,19 @@ fun CategoriesScreen(
             }
         }
 
-        // Product Grid
         if (filteredProducts.isEmpty()) {
             item {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(48.dp),
+                    modifier = Modifier.fillMaxWidth().padding(48.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (isArabic) "لا توجد منتجات في هذا التصنيف حالياً" else "No products found for this filter",
-                        color = Color.Gray,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = if (isArabic) "لا توجد منتجات في هذا التصنيف حالياً" else "No products found for this filter", color = Color.Gray, fontWeight = FontWeight.Bold)
                 }
             }
         } else {
             items(filteredProducts.chunked(2)) { rowItems ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     for (product in rowItems) {
@@ -231,6 +207,7 @@ fun CategoriesScreen(
                                 product = product,
                                 isArabic = isArabic,
                                 isWishlisted = wishlistedIds.contains(product.id),
+                                currencySymbol = currency,
                                 onProductClick = {
                                     viewModel.selectProduct(product)
                                     onNavigateToProduct(product)

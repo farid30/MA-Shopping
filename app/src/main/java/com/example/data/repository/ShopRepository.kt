@@ -16,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
-import java.util.UUID
 
 data class CartItemWithProduct(
     val cartItem: CartItem,
@@ -188,16 +187,13 @@ class ShopRepository(private val db: AppDatabase) {
 
         orderDao.insertOrder(order)
 
-        // Decrement product stock
         cartWithProducts.forEach { item ->
             val updatedStock = maxOf(0, item.product.stock - item.cartItem.quantity)
             productDao.updateStock(item.product.id, updatedStock)
         }
 
-        // Clear cart
         cartDao.clearCart()
 
-        // Create notification
         val notification = AppNotification(
             titleEn = "Order $orderId Confirmed! 🎉",
             titleAr = "تم تأكيد طلبك $orderId بنجاح! 🎉",

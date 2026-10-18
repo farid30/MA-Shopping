@@ -1,8 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="66dp"
-        android:height="66dp"
-        android:drawable="@drawable/ma_shopping_logo_1792242506131"
-        android:gravity="center" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Bag Handle -->
+    <path
+        android:strokeColor="#F59E0B"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M44,38 C44,30 64,30 64,38" />
+    <!-- Bag Body -->
+    <path
+        android:fillColor="#D97706"
+        android:pathData="M34,40 L74,40 L70,78 L38,78 Z" />
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M34,40 L54,40 L52,78 L38,78 Z" />
+    <!-- Letter M and A subtle cut -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M44,52 L47,66 L50,58 L53,66 L56,52 L53,52 L51,61 L49,54 L47,54 L45,61 L44,52 Z" />
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M59,66 L62,52 L65,52 L68,66 L65,66 L64,62 L63,62 L62,66 Z M63.5,58 L64.5,58 L64,55 Z" />
+</vector>
