@@ -30,7 +30,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.LocalOffer
@@ -674,6 +676,7 @@ fun AdminCustomShopTab(
 ) {
     val storeSettings by viewModel.storeSettings.collectAsState()
     val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
 
     var nameEn by remember(storeSettings) { mutableStateOf(storeSettings.shopNameEn) }
     var nameAr by remember(storeSettings) { mutableStateOf(storeSettings.shopNameAr) }
@@ -717,7 +720,7 @@ fun AdminCustomShopTab(
 
                         Button(
                             onClick = {
-                                val g = viewModel.generateCustomShopDetails()
+                                val g = viewModel.generateAndApplyCustomShop(null)
                                 nameEn = g.nameEn
                                 nameAr = g.nameAr
                                 taglineEn = g.taglineEn
@@ -733,7 +736,7 @@ fun AdminCustomShopTab(
                         ) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Navy900, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (isArabic) "توليد تلقائي" else "Generate Random", color = Navy900, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text(if (isArabic) "توليد وتطبيق فوري" else "Generate & Apply", color = Navy900, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                     }
 
@@ -760,7 +763,7 @@ fun AdminCustomShopTab(
                                 color = Color.White.copy(alpha = 0.15f),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, GoldPrimary.copy(alpha = 0.6f)),
                                 modifier = Modifier.clickable {
-                                    val g = viewModel.generateCustomShopDetails(niche.key)
+                                    val g = viewModel.generateAndApplyCustomShop(niche.key)
                                     nameEn = g.nameEn
                                     nameAr = g.nameAr
                                     taglineEn = g.taglineEn
@@ -922,6 +925,25 @@ fun AdminCustomShopTab(
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
+
+                    Button(
+                        onClick = { viewModel.downloadOrShareApk(context) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("btn_admin_download_apk")
+                    ) {
+                        Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isArabic) "تحميل ملف APK وحفظه في التنزيلات" else "Download APK & Save to Device",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     OutlinedButton(
                         onClick = {

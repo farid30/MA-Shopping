@@ -128,3 +128,5 @@ tasks.register<Copy>("copyApkToExport") {
 afterEvaluate {
   tasks.findByName("assembleDebug")?.finalizedBy("copyApkToExport")
 }
+
+

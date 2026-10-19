@@ -430,12 +430,19 @@ fun AccountScreen(
                                 fontSize = 11.sp,
                                 color = Color.Gray
                             )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "⚡ build_apk.sh / build_apk.bat (One-click APK generator)",
+                                fontSize = 11.sp,
+                                color = EmeraldGreen,
+                                fontWeight = FontWeight.Medium
+                            )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = if (isArabic)
-                                    "عند تصدير هذا المشروع (Export ZIP) ستجد ملفات APK مباشرة داخل مجلد apk/ لتثبيته فوراً على أي هاتف أو جهاز لوحي بنظام أندرويد."
+                                    "ملفات APK جاهزة مباشرة للتثبيت. يمكنك تحميلها الآن إلى جهازك، أو العثور عليها داخل مجلد apk/ عند تصدير المشروع كملف ZIP."
                                 else
-                                    "When exporting this project as a ZIP, the APK files are in the 'apk/' folder ready to install directly on any Android phone or tablet.",
+                                    "APK files are ready to install. Download directly to device below, or find them in the 'apk/' folder when exporting this project as a ZIP.",
                                 fontSize = 11.sp,
                                 color = Navy800
                             )
@@ -444,18 +451,36 @@ fun AccountScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    Button(
+                        onClick = { viewModel.downloadOrShareApk(context) },
+                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("btn_apk_download_share")
+                    ) {
+                        Icon(Icons.Default.FileDownload, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isArabic) "تحميل ملف APK وحفظه في التنزيلات" else "Download APK & Save to Device",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Button(
+                        OutlinedButton(
                             onClick = { showApkGuideDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen),
                             modifier = Modifier.weight(1f).testTag("btn_apk_install_guide")
                         ) {
                             Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (isArabic) "طريقة التثبيت" else "Install Guide", fontSize = 12.sp, color = Color.White)
+                            Text(if (isArabic) "طريقة التثبيت" else "Install Guide", fontSize = 12.sp)
                         }
 
                         OutlinedButton(
@@ -679,16 +704,16 @@ fun AccountScreen(
 
     // Custom Shop Name & Details Dialog (USER REQUIREMENT 4 & 6)
     if (showCustomShopDialog) {
-        var nameEnInput by remember { mutableStateOf(storeSettings.shopNameEn) }
-        var nameArInput by remember { mutableStateOf(storeSettings.shopNameAr) }
-        var taglineEnInput by remember { mutableStateOf(storeSettings.shopTaglineEn) }
-        var taglineArInput by remember { mutableStateOf(storeSettings.shopTaglineAr) }
-        var addressEnInput by remember { mutableStateOf(storeSettings.shopAddressEn) }
-        var addressArInput by remember { mutableStateOf(storeSettings.shopAddressAr) }
-        var phoneInput by remember { mutableStateOf(storeSettings.storeContactPhone) }
-        var emailInput by remember { mutableStateOf(storeSettings.storeContactEmail) }
-        var crInput by remember { mutableStateOf(storeSettings.commercialRegistrationNumber) }
-        var vatInput by remember { mutableStateOf(storeSettings.vatRegistrationNumber) }
+        var nameEnInput by remember(storeSettings) { mutableStateOf(storeSettings.shopNameEn) }
+        var nameArInput by remember(storeSettings) { mutableStateOf(storeSettings.shopNameAr) }
+        var taglineEnInput by remember(storeSettings) { mutableStateOf(storeSettings.shopTaglineEn) }
+        var taglineArInput by remember(storeSettings) { mutableStateOf(storeSettings.shopTaglineAr) }
+        var addressEnInput by remember(storeSettings) { mutableStateOf(storeSettings.shopAddressEn) }
+        var addressArInput by remember(storeSettings) { mutableStateOf(storeSettings.shopAddressAr) }
+        var phoneInput by remember(storeSettings) { mutableStateOf(storeSettings.storeContactPhone) }
+        var emailInput by remember(storeSettings) { mutableStateOf(storeSettings.storeContactEmail) }
+        var crInput by remember(storeSettings) { mutableStateOf(storeSettings.commercialRegistrationNumber) }
+        var vatInput by remember(storeSettings) { mutableStateOf(storeSettings.vatRegistrationNumber) }
 
         AlertDialog(
             onDismissRequest = { showCustomShopDialog = false },

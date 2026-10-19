@@ -15,13 +15,21 @@ import com.example.data.model.UserAddress
 import com.example.data.repository.CartItemWithProduct
 import com.example.data.repository.ShopRepository
 import com.example.data.seed.SeedData
+import android.content.Context
+import android.content.Intent
+import android.os.Environment
+import androidx.core.content.FileProvider
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.Locale
 
 data class ChatMessage(
@@ -168,12 +176,8 @@ class ShopViewModel(application: Application) : AndroidViewModel(application) {
 
     // Store Settings
     val storeSettings: StateFlow<StoreSettings> = repository.getSettings()
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            SeedData.initialSettings
-        ).combine(MutableStateFlow(Unit)) { s, _ -> s ?: SeedData.initialSettings }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SeedData.initialSettings)
+        .map { it ?: SeedData.initialSettings }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SeedData.initialSettings)
 
     // Orders
     val orders: StateFlow<List<Order>> = repository.getAllOrders()
@@ -472,8 +476,8 @@ class ShopViewModel(application: Application) : AndroidViewModel(application) {
             currencySymbolAr = preset.currencySymbolAr,
             instagramHandle = preset.instagram
         )
-        adminSaveSettings(updated)
-        showSnackbar(if (_isArabic.value) "تم تطبيق هوية المتجر: ${preset.nameAr}" else "Applied shop branding: ${preset.nameEn}")
+        val msg = if (_isArabic.value) "تم توليد وتطبيق هوية المتجر: ${preset.nameAr}" else "Applied shop branding: ${preset.nameEn}"
+        adminSaveSettings(updated, msg)
     }
 
     fun generateRandomShopConcept() {
@@ -774,10 +778,72 @@ class ShopViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun adminSaveSettings(settings: StoreSettings) {
+    fun adminSaveSettings(settings: StoreSettings, customSuccessMessage: String? = null) {
         viewModelScope.launch {
             repository.saveSettings(settings)
-            showSnackbar("Store settings saved successfully")
+            val msg = customSuccessMessage ?: if (_isArabic.value) "تم حفظ بيانات وإعدادات المتجر بنجاح" else "Store settings saved successfully"
+            showSnackbar(msg)
+        }
+    }
+
+    fun downloadOrShareApk(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val sourceDir = context.applicationInfo.sourceDir
+                val srcFile = File(sourceDir)
+                if (!srcFile.exists()) {
+                    withContext(Dispatchers.Main) {
+                        showSnackbar(if (_isArabic.value) "تعذر العثور على حزمة APK الحالية" else "Current APK package file not found")
+                    }
+                    return@launch
+                }
+
+                // Copy to public downloads directory
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                downloadsDir?.mkdirs()
+                val targetFile = File(downloadsDir, "MA-Shopping-v1.0.apk")
+                srcFile.copyTo(targetFile, overwrite = true)
+
+                // Copy to app external files dir for secure FileProvider sharing
+                val extFilesDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                extFilesDir?.mkdirs()
+                val shareableFile = File(extFilesDir, "MA-Shopping-v1.0.apk")
+                srcFile.copyTo(shareableFile, overwrite = true)
+
+                val sizeMb = String.format(Locale.US, "%.1f", targetFile.length() / (1024.0 * 1024.0))
+
+                withContext(Dispatchers.Main) {
+                    showSnackbar(
+                        if (_isArabic.value)
+                            "تم حفظ وتنزيل ملف APK ($sizeMb MB) بنجاح في مجلد التنزيلات!"
+                        else
+                            "APK ($sizeMb MB) saved to Downloads folder successfully!"
+                    )
+
+                    try {
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            shareableFile
+                        )
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "application/vnd.android.package-archive"
+                            putExtra(Intent.EXTRA_STREAM, uri)
+                            putExtra(Intent.EXTRA_SUBJECT, "MA Shopping Android App (APK)")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(Intent.createChooser(intent, if (_isArabic.value) "مشاركة أو تثبيت ملف التطبيق APK" else "Share or Install APK"))
+                    } catch (_: Exception) {
+                        // File is already saved to Downloads
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showSnackbar(if (_isArabic.value) "ملفات APK جاهزة ومحفوظة في مجلد apk/" else "APK files are ready in project apk/ directory")
+                }
+            }
         }
     }
 }
+

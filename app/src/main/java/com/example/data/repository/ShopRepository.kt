@@ -36,9 +36,11 @@ class ShopRepository(private val db: AppDatabase) {
     private val settingsDao = db.settingsDao()
 
     suspend fun initializeSeedDataIfNeeded() = withContext(Dispatchers.IO) {
+        if (settingsDao.getSettingsSync() == null) {
+            settingsDao.saveSettings(SeedData.initialSettings)
+        }
         val productCount = productDao.getProductCount()
         if (productCount == 0) {
-            settingsDao.saveSettings(SeedData.initialSettings)
             categoryDao.insertAll(SeedData.initialCategories)
             productDao.insertAll(SeedData.initialProducts)
             couponDao.insertAll(SeedData.initialCoupons)
